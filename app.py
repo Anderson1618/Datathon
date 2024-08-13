@@ -7,9 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/167uFjDzp4Ze_PiIYPdVpNghK2AMYDqpx
 """
 
-!pip install seaborn
-!pip install streamlit
-
 import streamlit as st
 import pickle
 import numpy as np

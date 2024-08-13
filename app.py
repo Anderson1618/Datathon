@@ -13,11 +13,12 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
-# Carregar e preparar os dados (substitua 'BD_modelo.csv' pelo caminho correto)
-file_path = 'BD_modelo.csv'  # Certifique-se de que o arquivo esteja no mesmo diretório ou forneça o caminho completo
+# Carregar e preparar os dados
+file_path = 'BD_modelo.csv'
 df = pd.read_csv(file_path)
 
 # Codificar variáveis categóricas
@@ -34,9 +35,9 @@ y_virada = df['PONTO_VIRADA']
 y_inde = df['INDE']
 
 # Dividir os dados para calcular acurácia
-X_train, X_test, y_train_pedra, y_test_pedra, y_train_virada, y_test_virada, y_train_inde, y_test_inde = train_test_split(
-    X, y_pedra, y_virada, y_inde, test_size=0.2, random_state=42
-)
+X_train, X_test, y_train_pedra, y_test_pedra = train_test_split(X, y_pedra, test_size=0.2, random_state=42)
+_, _, y_train_virada, y_test_virada = train_test_split(X, y_virada, test_size=0.2, random_state=42)
+_, _, y_train_inde, y_test_inde = train_test_split(X, y_inde, test_size=0.2, random_state=42)
 
 # Padronizar as features
 scaler = StandardScaler()

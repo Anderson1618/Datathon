@@ -14,8 +14,34 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
+
+# Configurar tema escuro
+st.set_page_config(layout="wide", page_title="Previsões Acadêmicas")
+st.markdown("""
+    <style>
+    body {
+        background-color: #0E1117;
+        color: #FFFFFF;
+    }
+    .stApp {
+        background-color: #0E1117;
+    }
+    h1, h2, h3, h4, h5, h6, .stText, .stMarkdown, .stDataFrame, .stTable, .stMetric {
+        color: #FFFFFF;
+    }
+    .stSelectbox, .stNumberInput, .stTextInput {
+        color: #000000;
+    }
+    .css-18e3th9 {
+        background-color: #0E1117;
+    }
+    .stMetric label {
+        color: #FFFFFF;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Carregar e preparar os dados
 file_path = 'BD_modelo.csv'
@@ -77,6 +103,8 @@ with open('rf_inde_model.pkl', 'rb') as f:
 # Calcular acurácia dos modelos
 pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
 virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
+inde_mse = mean_squared_error(y_test_inde, rf_inde.predict(X_test))
+inde_rmse = np.sqrt(inde_mse)
 
 # Criar interface no Streamlit
 st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023")
@@ -109,6 +137,7 @@ if not aluno_data.empty:
     # Mostrar acurácia dos modelos
     st.write(f"Acurácia do modelo para previsão de Pedra: {pedra_accuracy:.2f}")
     st.write(f"Acurácia do modelo para previsão de Ponto de Virada: {virada_accuracy:.2f}")
+    st.write(f"Erro médio quadrático raiz (RMSE) do modelo para previsão de INDE: {inde_rmse:.2f}")
 
     # Exibir resultados
     st.write(f"**Previsão de Pedra para 2023**: {pedra_pred[0]}")
@@ -119,14 +148,18 @@ if not aluno_data.empty:
     inde_history.loc[2023] = pred_inde[0]  # Adicionar previsão de 2023
 
     st.write("### Evolução do INDE do aluno (2020-2023)")
-    fig, ax = plt.subplots()
-    inde_history.plot(ax=ax, marker='o', linestyle='-', color='b')
-    ax.set_title(f'Evolução do INDE do Aluno {id_aluno}')
-    ax.set_ylabel('INDE')
-    ax.set_xlabel('Ano')
-    ax.axvline(x=2023, color='r', linestyle='--', label='Previsão para 2023')
-    ax.legend()
+    fig, ax = plt.subplots(figsize=(10, 6), facecolor='#0E1117')
+    ax.plot(inde_history.index, inde_history['INDE'], marker='o', color="#FF4B4B", linewidth=2)
+    ax.fill_between(inde_history.index, inde_history['INDE'], color="#FF4B4B", alpha=0.3)
+    ax.set_title(f'Evolução do INDE do Aluno {id_aluno}', fontsize=16, color='white')
+    ax.set_ylabel('INDE', fontsize=14, color='white')
+    ax.set_xlabel('Ano', fontsize=14, color='white')
+    ax.axvline(x=2023, color='yellow', linestyle='--', linewidth=2, label='Previsão para 2023')
+    ax.tick_params(colors='white')
+    ax.legend(loc='upper left', fontsize=12, facecolor='#0E1117')
+    fig.patch.set_facecolor('#0E1117')
     st.pyplot(fig)
 
 else:
     st.write("Nenhum dado encontrado para o ID de aluno selecionado.")
+

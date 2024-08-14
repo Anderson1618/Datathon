@@ -12,7 +12,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 
@@ -76,9 +76,14 @@ if not aluno_data.empty:
         # Previsões de INDE para 2023 e 2024
         inde_2023 = forecast.iloc[0]
         inde_2024 = forecast.iloc[1]
+
+        # Calcular erro (RMSE) do modelo ARIMA
+        arima_rmse = np.sqrt(mean_squared_error(inde_series, model_fit.predict(start=inde_series.index[0], end=inde_series.index[-1])))
+
     except Exception as e:
         st.error(f"Erro ao gerar previsão ARIMA: {e}")
         inde_2023, inde_2024 = None, None
+        arima_rmse = None
 
     # Fazer previsões para PEDRA e PONTO_VIRADA
     input_data = np.array([[ano_ingresso, inde_series.iloc[-1], 2023]])
@@ -93,6 +98,8 @@ if not aluno_data.empty:
     # Mostrar acurácia dos modelos
     st.write(f"Acurácia do modelo para previsão de Pedra: {pedra_accuracy:.2f}")
     st.write(f"Acurácia do modelo para previsão de Ponto de Virada: {virada_accuracy:.2f}")
+    if arima_rmse is not None:
+        st.write(f"Erro médio quadrático raiz (RMSE) do modelo ARIMA para INDE: {arima_rmse:.2f}")
 
     # Exibir resultados
     st.write(f"**Previsão de Pedra para 2023**: {pedra_pred[0]}")
@@ -104,21 +111,29 @@ if not aluno_data.empty:
 
         st.write("### Evolução do INDE do aluno (2020-2024)")
         fig, ax = plt.subplots()
-        inde_history.plot(ax=ax, marker='o', linestyle='-', color='b')
+
+        # Plotar os anos até 2022 em azul
+        inde_history.loc[inde_history.index <= 2022].plot(ax=ax, marker='o', linestyle='-', color='b', label='Histórico INDE')
+
+        # Plotar as previsões de 2023 e 2024 em dourado
+        inde_history.loc[inde_history.index >= 2023].plot(ax=ax, marker='o', linestyle='-', color='gold', label='Previsão INDE')
 
         # Adicionar valores no gráfico
         for i in inde_history.index:
             ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=12, ha='center')
 
-        ax.set_title(f'Evolução do INDE do Aluno {id_aluno}')
-        ax.set_ylabel('INDE')
-        ax.set_xlabel('Ano')
+        # Configurar visual do gráfico
+        ax.set_facecolor('#0E1117')
+        fig.patch.set_facecolor('#0E1117')
+        ax.set_title(f'Evolução do INDE do Aluno {id_aluno}', fontsize=16, color='white')
+        ax.set_ylabel('INDE', fontsize=14, color='white')
+        ax.set_xlabel('Ano', fontsize=14, color='white')
         ax.set_xticks([2020, 2021, 2022, 2023, 2024])  # Exibir apenas os anos desejados
         ax.axvline(x=2023, color='r', linestyle='--', label='Previsão para 2023')
         ax.axvline(x=2024, color='orange', linestyle='--', label='Previsão para 2024')
+        ax.tick_params(colors='white')
         ax.legend()
         st.pyplot(fig)
 
 else:
     st.write("Nenhum dado encontrado para o ID de aluno selecionado.")
-

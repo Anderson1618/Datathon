@@ -108,8 +108,8 @@ if not aluno_data.empty:
         st.write(f"**Erro médio quadrático raiz (RMSE) do modelo ARIMA para INDE:** **{arima_rmse:.2f}**")
 
     # Exibir resultados grifados
-    st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
-    st.write(f"**O aluno estará em ponto de virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
+    st.write(f"**Projeção de Pedra para 2023:** **{pedra_pred[0]}**")
+    st.write(f"**O aluno estará em possivel ponto de virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
 
     if inde_2023 is not None:
         # Concatenação da previsão com a série existente

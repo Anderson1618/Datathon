@@ -16,8 +16,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
-import plotly.express as px
-import plotly.graph_objects as go
 from fpdf import FPDF
 import io
 
@@ -165,3 +163,7 @@ if st.button("Exportar Relatório em PDF"):
 
     # Adicionar título
     pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Relatório de Previsões", ln=True, align="C")
+
+    # Adicionar conteúdo das previsões
+

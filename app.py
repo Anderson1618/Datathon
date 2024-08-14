@@ -15,6 +15,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
+import plotly.graph_objs as go
+from sklearn.inspection import permutation_importance
 
 # Carregar e preparar os dados
 file_path = 'BD_modelo.csv'
@@ -68,82 +70,94 @@ A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada 
 st.markdown("## **Escolha o ID do Aluno**")
 id_aluno = st.selectbox("", alunos_completos['ID_ALUNO'].unique())
 
-# Filtrar os dados do aluno selecionado
-aluno_data = alunos_completos[alunos_completos['ID_ALUNO'] == id_aluno].sort_values(by='ano')
+# Adicionar possibilidade de comparar múltiplos alunos
+comparar_ids = st.multiselect("Selecione outros IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique(), default=[id_aluno])
+
+# Filtrar os dados dos alunos selecionados
+alunos_data = alunos_completos[alunos_completos['ID_ALUNO'].isin(comparar_ids)].sort_values(by='ano')
 
 # Verificar se os dados do aluno estão disponíveis
-if not aluno_data.empty:
-    # Preparar os dados do aluno para previsões
-    ano_ingresso = aluno_data['ANO_INGRESSO'].values[0]
-    inde_series = aluno_data.set_index('ano')['INDE']
+if not alunos_data.empty:
+    for id_aluno in comparar_ids:
+        aluno_data = alunos_data[alunos_data['ID_ALUNO'] == id_aluno]
 
-    # Ajustar o modelo ARIMA para prever INDE
-    try:
-        model = ARIMA(inde_series, order=(1, 1, 1))
-        model_fit = model.fit()
-        forecast = model_fit.forecast(steps=1)  # Prever apenas 2023
+        # Preparar os dados do aluno para previsões
+        ano_ingresso = aluno_data['ANO_INGRESSO'].values[0]
+        inde_series = aluno_data.set_index('ano')['INDE']
 
-        # Previsão de INDE para 2023
-        inde_2023 = forecast.iloc[0]
+        # Ajustar o modelo ARIMA para prever INDE
+        try:
+            model = ARIMA(inde_series, order=(1, 1, 1))
+            model_fit = model.fit()
+            forecast = model_fit.forecast(steps=1)  # Prever apenas 2023
 
-        # Calcular erro (RMSE) do modelo ARIMA
-        arima_rmse = np.sqrt(mean_squared_error(inde_series, model_fit.predict(start=inde_series.index[0], end=inde_series.index[-1])))
+            # Previsão de INDE para 2023
+            inde_2023 = forecast.iloc[0]
 
-    except Exception as e:
-        st.error(f"Erro ao gerar previsão ARIMA: {e}")
-        inde_2023 = None
-        arima_rmse = None
+            # Calcular erro (RMSE) do modelo ARIMA
+            arima_rmse = np.sqrt(mean_squared_error(inde_series, model_fit.predict(start=inde_series.index[0], end=inde_series.index[-1])))
 
-    # Fazer previsões para PEDRA e PONTO_VIRADA
-    input_data = np.array([[ano_ingresso, inde_series.iloc[-1], 2023]])
-    input_data_scaled = scaler.transform(input_data)
+        except Exception as e:
+            st.error(f"Erro ao gerar previsão ARIMA para o aluno {id_aluno}: {e}")
+            inde_2023 = None
+            arima_rmse = None
 
-    pred_pedra = rf_pedra.predict(input_data_scaled)
-    pred_virada = rf_virada.predict(input_data_scaled)
+        # Fazer previsões para PEDRA e PONTO_VIRADA
+        input_data = np.array([[ano_ingresso, inde_series.iloc[-1], 2023]])
+        input_data_scaled = scaler.transform(input_data)
 
-    # Traduzir a previsão de pedra para o valor original
-    pedra_pred = label_encoder_pedra.inverse_transform(pred_pedra)
+        pred_pedra = rf_pedra.predict(input_data_scaled)
+        pred_virada = rf_virada.predict(input_data_scaled)
 
-    # Mostrar acurácia dos modelos com resultados grifados
-    st.write(f"**Acurácia do modelo para previsão de Pedra:** **{pedra_accuracy:.2f}**")
-    st.write(f"**Acurácia do modelo para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
-    if arima_rmse is not None:
-        st.write(f"**Erro médio quadrático raiz (RMSE) do modelo ARIMA para INDE:** **{arima_rmse:.2f}**")
+        # Traduzir a previsão de pedra para o valor original
+        pedra_pred = label_encoder_pedra.inverse_transform(pred_pedra)
 
-    # Exibir resultados grifados
-    st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
-    st.write(f"**O aluno estará em ponto de virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
+        # Mostrar acurácia dos modelos com resultados grifados
+        st.write(f"**Acurácia do modelo para previsão de Pedra (Aluno {id_aluno}):** **{pedra_accuracy:.2f}**")
+        st.write(f"**Acurácia do modelo para previsão de Ponto de Virada (Aluno {id_aluno}):** **{virada_accuracy:.2f}**")
+        if arima_rmse is not None:
+            st.write(f"**Erro médio quadrático raiz (RMSE) do modelo ARIMA para INDE (Aluno {id_aluno}):** **{arima_rmse:.2f}**")
 
-    if inde_2023 is not None:
-        # Concatenação da previsão com a série existente
-        inde_history = pd.concat([inde_series, pd.Series([inde_2023], index=[2023])])
+        # Exibir resultados grifados
+        st.write(f"**Previsão de Pedra para 2023 (Aluno {id_aluno}):** **{pedra_pred[0]}**")
+        st.write(f"**O aluno estará em ponto de virada em 2023 (Aluno {id_aluno}):** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
 
-        st.write("### Evolução do INDE do aluno (2020-2023)")
-        fig, ax = plt.subplots(figsize=(8, 4))  # Diminuir o tamanho do gráfico
+        if inde_2023 is not None:
+            # Concatenação da previsão com a série existente
+            inde_history = pd.concat([inde_series, pd.Series([inde_2023], index=[2023])])
 
-        # Plotar os anos até 2022 em azul
-        ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue')
+            st.write(f"### Evolução do INDE do aluno {id_aluno} (2020-2023)")
+            fig, ax = plt.subplots(figsize=(8, 4))  # Diminuir o tamanho do gráfico
 
-        # Plotar a linha vermelha de 2022 para 2023
-        ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='red')
+            # Plotar os anos até 2022 em azul
+            ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue')
 
-        # Adicionar valores no gráfico
-        for i in inde_history.index:
-            ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=10, ha='center', color='white')  # Diminuir o tamanho da fonte
+            # Plotar a linha vermelha de 2022 para 2023
+            ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='red')
 
-        # Configurar visual do gráfico
-        ax.set_facecolor('#0E1117')
-        fig.patch.set_facecolor('#0E1117')
-        ax.set_title(f'Evolução do INDE do Aluno {id_aluno}', fontsize=14, color='white')  # Diminuir o tamanho da fonte do título
-        ax.set_ylabel('INDE', fontsize=12, color='white')  # Diminuir o tamanho da fonte do rótulo
-        ax.set_xlabel('Ano', fontsize=12, color='white')  # Diminuir o tamanho da fonte do rótulo
-        ax.set_xticks([2020, 2021, 2022, 2023])  # Exibir apenas os anos desejados
-        ax.tick_params(colors='white')
-        ax.yaxis.set_visible(False)  # Remover números laterais
-        ax.legend().set_visible(False)  # Remover a legenda
-        st.pyplot(fig)
+            # Adicionar valores no gráfico
+            for i in inde_history.index:
+                ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=10, ha='center', color='white')  # Diminuir o tamanho da fonte
 
-else:
-    st.write("Nenhum dado encontrado para o ID de aluno selecionado.")
+            # Configurar visual do gráfico
+            ax.set_facecolor('#0E1117')
+            fig.patch.set_facecolor('#0E1117')
+            ax.set_title(f'Evolução do INDE do Aluno {id_aluno}', fontsize=14, color='white')  # Diminuir o tamanho da fonte do título
+            ax.set_ylabel('INDE', fontsize=12, color='white')  # Diminuir o tamanho da fonte do rótulo
+            ax.set_xlabel('Ano', fontsize=12, color='white')  # Diminuir o tamanho da fonte do rótulo
+            ax.set_xticks([2020, 2021, 2022, 2023])  # Exibir apenas os anos desejados
+            ax.tick_params(colors='white')
+            ax.yaxis.set_visible(False)  # Remover números laterais
+            ax.legend().set_visible(False)  # Remover a legenda
+            st.pyplot(fig)
+
+    # Análise de Importância de Características
+    st.write("### Importância das características no modelo RandomForest")
+    importance_pedra = permutation_importance(rf_pedra, X_test, y_test_pedra, n_repeats=10, random_state=42)
+    importance_virada = permutation_importance(rf_virada, X_test, y_test_virada, n_repeats=10, random_state=42)
+
+    st.write(f"**Importância para PEDRA:** {dict(zip(X.columns, importance_pedra.importances_mean))}")
+    st.write(f"**Importância para PONTO_VIRADA:** {dict(zip(X
+
 
 

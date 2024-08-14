@@ -96,7 +96,7 @@ if not aluno_data.empty:
     inde_2022 = aluno_data[aluno_data['ano'] == 2022]['INDE'].values[0] if 2022 in aluno_data['ano'].values else 7.5
     ano = 2023  # Ano de previsão
 
-    # Dados para previsão
+    # Dados para previsão (usando ano 2023 para a previsão)
     input_data = np.array([[ano_ingresso, inde_2022, ano]])
     input_data_scaled = scaler.transform(input_data)
 
@@ -111,6 +111,7 @@ if not aluno_data.empty:
     # Mostrar acurácia dos modelos
     st.write(f"Acurácia do modelo para previsão de Pedra: {pedra_accuracy:.2f}")
     st.write(f"Acurácia do modelo para previsão de Ponto de Virada: {virada_accuracy:.2f}")
+    st.write(f"Erro médio quadrático raiz (RMSE) do modelo para previsão de INDE: {inde_rmse:.2f}")
 
     # Exibir resultados
     st.write(f"**Previsão de Pedra para 2023**: {pedra_pred[0]}")
@@ -138,6 +139,7 @@ if not aluno_data.empty:
 
 else:
     st.write("Nenhum dado encontrado para o ID de aluno selecionado.")
+
 
 
 

@@ -55,6 +55,12 @@ virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 # Criar interface no Streamlit
 st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023 e 2024")
 
+# Adicionar explicação sobre a acurácia
+st.write("""
+### Lógica de Acurácia
+A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada é baseada na proporção de previsões corretas que o modelo faz em comparação ao total de previsões. Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
+""")
+
 # Selecionar o ID_ALUNO
 id_aluno = st.selectbox("Escolha o ID do Aluno", df['ID_ALUNO'].unique())
 
@@ -112,15 +118,16 @@ if not aluno_data.empty:
         st.write("### Evolução do INDE do aluno (2020-2024)")
         fig, ax = plt.subplots()
 
-        # Plotar os anos até 2022 em azul
-        inde_history.loc[inde_history.index <= 2022].plot(ax=ax, marker='o', linestyle='-', color='b', label='Histórico INDE')
+        # Plotar os anos até 2022 em vermelho
+        ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='red', label='Histórico INDE')
 
-        # Plotar as previsões de 2023 e 2024 em dourado
-        inde_history.loc[inde_history.index >= 2023].plot(ax=ax, marker='o', linestyle='-', color='gold', label='Previsão INDE')
+        # Plotar a linha dourada de 2022 para 2023 e 2023 para 2024
+        ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='gold', label='Previsão INDE 2023')
+        ax.plot([2023, 2024], [inde_2023, inde_2024], marker='o', linestyle='-', color='gold', label='Previsão INDE 2024')
 
         # Adicionar valores no gráfico
         for i in inde_history.index:
-            ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=12, ha='center')
+            ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=12, ha='center', color='white')
 
         # Configurar visual do gráfico
         ax.set_facecolor('#0E1117')
@@ -129,8 +136,6 @@ if not aluno_data.empty:
         ax.set_ylabel('INDE', fontsize=14, color='white')
         ax.set_xlabel('Ano', fontsize=14, color='white')
         ax.set_xticks([2020, 2021, 2022, 2023, 2024])  # Exibir apenas os anos desejados
-        ax.axvline(x=2023, color='r', linestyle='--', label='Previsão para 2023')
-        ax.axvline(x=2024, color='orange', linestyle='--', label='Previsão para 2024')
         ax.tick_params(colors='white')
         ax.legend()
         st.pyplot(fig)

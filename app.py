@@ -70,13 +70,13 @@ A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada 
 st.markdown("## **Escolha o ID do Aluno**")
 id_aluno = st.selectbox("", alunos_completos['ID_ALUNO'].unique())
 
-# Adicionar possibilidade de comparar múltiplos alunos
+# 3. Adicionar possibilidade de comparar múltiplos alunos
 comparar_ids = st.multiselect("Selecione outros IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique(), default=[id_aluno])
 
 # Filtrar os dados dos alunos selecionados
 alunos_data = alunos_completos[alunos_completos['ID_ALUNO'].isin(comparar_ids)].sort_values(by='ano')
 
-# Verificar se os dados do aluno estão disponíveis
+# 5. Verificar se os dados do aluno estão disponíveis
 if not alunos_data.empty:
     for id_aluno in comparar_ids:
         aluno_data = alunos_data[alunos_data['ID_ALUNO'] == id_aluno]
@@ -85,7 +85,7 @@ if not alunos_data.empty:
         ano_ingresso = aluno_data['ANO_INGRESSO'].values[0]
         inde_series = aluno_data.set_index('ano')['INDE']
 
-        # Ajustar o modelo ARIMA para prever INDE
+        # 6. Ajustar o modelo ARIMA para prever INDE
         try:
             model = ARIMA(inde_series, order=(1, 1, 1))
             model_fit = model.fit()
@@ -112,7 +112,7 @@ if not alunos_data.empty:
         # Traduzir a previsão de pedra para o valor original
         pedra_pred = label_encoder_pedra.inverse_transform(pred_pedra)
 
-        # Mostrar acurácia dos modelos com resultados grifados
+        # 7. Mostrar acurácia dos modelos com resultados grifados
         st.write(f"**Acurácia do modelo para previsão de Pedra (Aluno {id_aluno}):** **{pedra_accuracy:.2f}**")
         st.write(f"**Acurácia do modelo para previsão de Ponto de Virada (Aluno {id_aluno}):** **{virada_accuracy:.2f}**")
         if arima_rmse is not None:
@@ -129,7 +129,7 @@ if not alunos_data.empty:
             st.write(f"### Evolução do INDE do aluno {id_aluno} (2020-2023)")
             fig, ax = plt.subplots(figsize=(8, 4))  # Diminuir o tamanho do gráfico
 
-            # Plotar os anos até 2022 em azul
+            # 8. Plotar os anos até 2022 em azul
             ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue')
 
             # Plotar a linha vermelha de 2022 para 2023
@@ -151,13 +151,10 @@ if not alunos_data.empty:
             ax.legend().set_visible(False)  # Remover a legenda
             st.pyplot(fig)
 
-    # Análise de Importância de Características
+    # 9. Análise de Importância de Características
     st.write("### Importância das características no modelo RandomForest")
     importance_pedra = permutation_importance(rf_pedra, X_test, y_test_pedra, n_repeats=10, random_state=42)
     importance_virada = permutation_importance(rf_virada, X_test, y_test_virada, n_repeats=10, random_state=42)
 
     st.write(f"**Importância para PEDRA:** {dict(zip(X.columns, importance_pedra.importances_mean))}")
-    st.write(f"**Importância para PONTO_VIRADA:** {dict(zip(X
-
-
-
+    st.write

@@ -99,8 +99,8 @@ if not aluno_data.empty:
     st.write(f"**O aluno estará em ponto de virada em 2023**: {'Sim' if pred_virada[0] == 1 else 'Não'}")
 
     if inde_2023 is not None and inde_2024 is not None:
-        # Plotar o gráfico de INDE de 2020 a 2024
-        inde_history = inde_series.append(pd.Series([inde_2023, inde_2024], index=[2023, 2024]))
+        # Concatenação das previsões com a série existente
+        inde_history = pd.concat([inde_series, pd.Series([inde_2023, inde_2024], index=[2023, 2024])])
 
         st.write("### Evolução do INDE do aluno (2020-2024)")
         fig, ax = plt.subplots()
@@ -121,3 +121,4 @@ if not aluno_data.empty:
 
 else:
     st.write("Nenhum dado encontrado para o ID de aluno selecionado.")
+

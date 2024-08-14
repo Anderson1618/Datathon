@@ -61,8 +61,9 @@ st.write("""
 A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada é baseada na proporção de previsões corretas que o modelo faz em comparação ao total de previsões. Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
 """)
 
-# Selecionar o ID_ALUNO
-id_aluno = st.selectbox("Escolha o ID do Aluno", df['ID_ALUNO'].unique())
+# Destacar a escolha do ID do Aluno
+st.markdown("## **Escolha o ID do Aluno**")
+id_aluno = st.selectbox("", df['ID_ALUNO'].unique())
 
 # Filtrar os dados do aluno selecionado
 aluno_data = df[df['ID_ALUNO'] == id_aluno].sort_values(by='ano')
@@ -101,29 +102,29 @@ if not aluno_data.empty:
     # Traduzir a previsão de pedra para o valor original
     pedra_pred = label_encoder_pedra.inverse_transform(pred_pedra)
 
-    # Mostrar acurácia dos modelos
-    st.write(f"Acurácia do modelo para previsão de Pedra: {pedra_accuracy:.2f}")
-    st.write(f"Acurácia do modelo para previsão de Ponto de Virada: {virada_accuracy:.2f}")
+    # Mostrar acurácia dos modelos com resultados grifados
+    st.write(f"**Acurácia do modelo para previsão de Pedra:** **{pedra_accuracy:.2f}**")
+    st.write(f"**Acurácia do modelo para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
     if arima_rmse is not None:
-        st.write(f"Erro médio quadrático raiz (RMSE) do modelo ARIMA para INDE: {arima_rmse:.2f}")
+        st.write(f"**Erro médio quadrático raiz (RMSE) do modelo ARIMA para INDE:** **{arima_rmse:.2f}**")
 
-    # Exibir resultados
-    st.write(f"**Previsão de Pedra para 2023**: {pedra_pred[0]}")
-    st.write(f"**O aluno estará em ponto de virada em 2023**: {'Sim' if pred_virada[0] == 1 else 'Não'}")
+    # Exibir resultados grifados
+    st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
+    st.write(f"**O aluno estará em ponto de virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
 
     if inde_2023 is not None and inde_2024 is not None:
         # Concatenação das previsões com a série existente
         inde_history = pd.concat([inde_series, pd.Series([inde_2023, inde_2024], index=[2023, 2024])])
 
         st.write("### Evolução do INDE do aluno (2020-2024)")
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(8, 4))  # Diminuir o tamanho do gráfico
 
-        # Plotar os anos até 2022 em vermelho
-        ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='red', label='Histórico INDE')
+        # Plotar os anos até 2022 em azul
+        ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue', label='INDE')
 
         # Plotar a linha dourada de 2022 para 2023 e 2023 para 2024
-        ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='gold', label='Previsão INDE 2023')
-        ax.plot([2023, 2024], [inde_2023, inde_2024], marker='o', linestyle='-', color='gold', label='Previsão INDE 2024')
+        ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='gold')
+        ax.plot([2023, 2024], [inde_2023, inde_2024], marker='o', linestyle='-', color='gold')
 
         # Adicionar valores no gráfico
         for i in inde_history.index:
@@ -137,8 +138,9 @@ if not aluno_data.empty:
         ax.set_xlabel('Ano', fontsize=14, color='white')
         ax.set_xticks([2020, 2021, 2022, 2023, 2024])  # Exibir apenas os anos desejados
         ax.tick_params(colors='white')
-        ax.legend()
+        ax.legend(loc='upper right')  # Simplesmente "INDE" na legenda
         st.pyplot(fig)
 
 else:
     st.write("Nenhum dado encontrado para o ID de aluno selecionado.")
+

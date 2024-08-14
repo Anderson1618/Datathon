@@ -20,17 +20,20 @@ from statsmodels.tsa.arima.model import ARIMA
 file_path = 'BD_modelo.csv'
 df = pd.read_csv(file_path)
 
+# Filtrar alunos que possuem dados suficientes para análise (exemplo: dados de 2022 e anteriores)
+alunos_completos = df.groupby('ID_ALUNO').filter(lambda x: x['ano'].max() == 2022)
+
 # Codificar variáveis categóricas
 label_encoder_pedra = LabelEncoder()
 label_encoder_virada = LabelEncoder()
 
-df['PEDRA'] = label_encoder_pedra.fit_transform(df['PEDRA'])
-df['PONTO_VIRADA'] = label_encoder_virada.fit_transform(df['PONTO_VIRADA'])
+alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['PEDRA'])
+alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
 
 # Separar as features e os targets
-X = df[['ANO_INGRESSO', 'INDE', 'ano']]
-y_pedra = df['PEDRA']
-y_virada = df['PONTO_VIRADA']
+X = alunos_completos[['ANO_INGRESSO', 'INDE', 'ano']]
+y_pedra = alunos_completos['PEDRA']
+y_virada = alunos_completos['PONTO_VIRADA']
 
 # Dividir os dados para calcular acurácia
 X_train, X_test, y_train_pedra, y_test_pedra = train_test_split(X, y_pedra, test_size=0.2, random_state=42)
@@ -63,10 +66,10 @@ A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada 
 
 # Destacar a escolha do ID do Aluno
 st.markdown("## **Escolha o ID do Aluno**")
-id_aluno = st.selectbox("", df['ID_ALUNO'].unique())
+id_aluno = st.selectbox("", alunos_completos['ID_ALUNO'].unique())
 
 # Filtrar os dados do aluno selecionado
-aluno_data = df[df['ID_ALUNO'] == id_aluno].sort_values(by='ano')
+aluno_data = alunos_completos[alunos_completos['ID_ALUNO'] == id_aluno].sort_values(by='ano')
 
 # Verificar se os dados do aluno estão disponíveis
 if not aluno_data.empty:
@@ -108,8 +111,8 @@ if not aluno_data.empty:
         st.write(f"**Erro médio quadrático raiz (RMSE) do modelo ARIMA para INDE:** **{arima_rmse:.2f}**")
 
     # Exibir resultados grifados
-    st.write(f"**Projeção de Pedra para 2023:** **{pedra_pred[0]}**")
-    st.write(f"**O aluno estará em possivel ponto de virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
+    st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
+    st.write(f"**O aluno estará em ponto de virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
 
     if inde_2023 is not None:
         # Concatenação da previsão com a série existente

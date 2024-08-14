@@ -15,7 +15,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
-from sklearn.inspection import permutation_importance
 
 # Carregar e preparar os dados
 file_path = 'BD_modelo.csv'
@@ -149,11 +148,3 @@ if not alunos_data.empty:
                 ax.yaxis.set_visible(False)
                 ax.legend().set_visible(False)
                 st.pyplot(fig)
-
-    # 9. Análise de Importância de Características
-    st.write("### Importância das características no modelo RandomForest")
-    importance_pedra = permutation_importance(rf_pedra, X_test, y_test_pedra, n_repeats=10, random_state=42)
-    importance_virada = permutation_importance(rf_virada, X_test, y_test_virada, n_repeats=10, random_state=42)
-
-    st.write(f"**Importância para PEDRA:** {dict(zip(X.columns, importance_pedra.importances_mean))}")
-    st.write(f"**Importância para PONTO_VIRADA:** {dict(zip(X.columns, importance_virada.importances_mean))}")

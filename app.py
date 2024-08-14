@@ -15,7 +15,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
-import plotly.graph_objs as go
 from sklearn.inspection import permutation_importance
 
 # Carregar e preparar os dados

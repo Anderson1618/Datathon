@@ -14,7 +14,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
 
 # Carregar e preparar os dados
@@ -77,6 +77,8 @@ with open('rf_inde_model.pkl', 'rb') as f:
 # Calcular acurácia dos modelos
 pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
 virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
+inde_mse = mean_squared_error(y_test_inde, rf_inde.predict(X_test))
+inde_rmse = np.sqrt(inde_mse)
 
 # Criar interface no Streamlit
 st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023")
@@ -121,14 +123,21 @@ if not aluno_data.empty:
     st.write("### Evolução do INDE do aluno (2020-2023)")
     fig, ax = plt.subplots()
     inde_history.plot(ax=ax, marker='o', linestyle='-', color='b')
+
+    # Adicionar valores no gráfico
+    for i in inde_history.index:
+        ax.text(i, inde_history.loc[i, 'INDE'], f'{inde_history.loc[i, "INDE"]:.2f}', fontsize=12, ha='center')
+
     ax.set_title(f'Evolução do INDE do Aluno {id_aluno}')
     ax.set_ylabel('INDE')
     ax.set_xlabel('Ano')
+    ax.set_xticks([2020, 2021, 2022, 2023])  # Exibir apenas os anos desejados
     ax.axvline(x=2023, color='r', linestyle='--', label='Previsão para 2023')
     ax.legend()
     st.pyplot(fig)
 
 else:
     st.write("Nenhum dado encontrado para o ID de aluno selecionado.")
+
 
 

@@ -65,19 +65,17 @@ st.write("""
 A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada é baseada na proporção de previsões corretas que o modelo faz em comparação ao total de previsões. Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
 """)
 
-# Destacar a escolha do ID do Aluno
-st.markdown("## **Escolha o ID do Aluno**")
-id_aluno = st.selectbox("", alunos_completos['ID_ALUNO'].unique())
-
 # 3. Adicionar possibilidade de comparar múltiplos alunos
-comparar_ids = st.multiselect("Selecione outros IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique(), default=[id_aluno])
+comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
 
 # Filtrar os dados dos alunos selecionados
 alunos_data = alunos_completos[alunos_completos['ID_ALUNO'].isin(comparar_ids)].sort_values(by='ano')
 
 # 5. Verificar se os dados do aluno estão disponíveis
 if not alunos_data.empty:
-    for id_aluno in comparar_ids:
+    cols = st.columns(len(comparar_ids))  # Criar colunas para exibir gráficos lado a lado
+    
+    for index, id_aluno in enumerate(comparar_ids):
         aluno_data = alunos_data[alunos_data['ID_ALUNO'] == id_aluno]
 
         # Preparar os dados do aluno para previsões
@@ -111,44 +109,46 @@ if not alunos_data.empty:
         # Traduzir a previsão de pedra para o valor original
         pedra_pred = label_encoder_pedra.inverse_transform(pred_pedra)
 
-        # 7. Mostrar acurácia dos modelos com resultados grifados
-        st.write(f"**Acurácia do modelo para previsão de Pedra (Aluno {id_aluno}):** **{pedra_accuracy:.2f}**")
-        st.write(f"**Acurácia do modelo para previsão de Ponto de Virada (Aluno {id_aluno}):** **{virada_accuracy:.2f}**")
-        if arima_rmse is not None:
-            st.write(f"**Erro médio quadrático raiz (RMSE) do modelo ARIMA para INDE (Aluno {id_aluno}):** **{arima_rmse:.2f}**")
+        with cols[index]:
+            # 7. Mostrar acurácia dos modelos com resultados grifados
+            st.write(f"**Aluno {id_aluno}:**")
+            st.write(f"**Acurácia para previsão de Pedra:** **{pedra_accuracy:.2f}**")
+            st.write(f"**Acurácia para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
+            if arima_rmse is not None:
+                st.write(f"**RMSE para INDE:** **{arima_rmse:.2f}**")
 
-        # Exibir resultados grifados
-        st.write(f"**Previsão de Pedra para 2023 (Aluno {id_aluno}):** **{pedra_pred[0]}**")
-        st.write(f"**O aluno estará em ponto de virada em 2023 (Aluno {id_aluno}):** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
+            # Exibir resultados grifados
+            st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
+            st.write(f"**Ponto de Virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
 
-        if inde_2023 is not None:
-            # Concatenação da previsão com a série existente
-            inde_history = pd.concat([inde_series, pd.Series([inde_2023], index=[2023])])
+            if inde_2023 is not None:
+                # Concatenação da previsão com a série existente
+                inde_history = pd.concat([inde_series, pd.Series([inde_2023], index=[2023])])
 
-            st.write(f"### Evolução do INDE do aluno {id_aluno} (2020-2023)")
-            fig, ax = plt.subplots(figsize=(8, 4))  # Diminuir o tamanho do gráfico
+                st.write(f"### Evolução do INDE (2020-2023)")
+                fig, ax = plt.subplots(figsize=(6, 3))  # Ajustar o tamanho do gráfico
 
-            # 8. Plotar os anos até 2022 em azul
-            ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue')
+                # 8. Plotar os anos até 2022 em azul
+                ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue')
 
-            # Plotar a linha vermelha de 2022 para 2023
-            ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='red')
+                # Plotar a linha vermelha de 2022 para 2023
+                ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='red')
 
-            # Adicionar valores no gráfico
-            for i in inde_history.index:
-                ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=10, ha='center', color='white')  # Diminuir o tamanho da fonte
+                # Adicionar valores no gráfico
+                for i in inde_history.index:
+                    ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=10, ha='center', color='white')
 
-            # Configurar visual do gráfico
-            ax.set_facecolor('#0E1117')
-            fig.patch.set_facecolor('#0E1117')
-            ax.set_title(f'Evolução do INDE do Aluno {id_aluno}', fontsize=14, color='white')  # Diminuir o tamanho da fonte do título
-            ax.set_ylabel('INDE', fontsize=12, color='white')  # Diminuir o tamanho da fonte do rótulo
-            ax.set_xlabel('Ano', fontsize=12, color='white')  # Diminuir o tamanho da fonte do rótulo
-            ax.set_xticks([2020, 2021, 2022, 2023])  # Exibir apenas os anos desejados
-            ax.tick_params(colors='white')
-            ax.yaxis.set_visible(False)  # Remover números laterais
-            ax.legend().set_visible(False)  # Remover a legenda
-            st.pyplot(fig)
+                # Configurar visual do gráfico
+                ax.set_facecolor('#0E1117')
+                fig.patch.set_facecolor('#0E1117')
+                ax.set_title(f'INDE Aluno {id_aluno}', fontsize=14, color='white')
+                ax.set_ylabel('INDE', fontsize=12, color='white')
+                ax.set_xlabel('Ano', fontsize=12, color='white')
+                ax.set_xticks([2020, 2021, 2022, 2023])
+                ax.tick_params(colors='white')
+                ax.yaxis.set_visible(False)
+                ax.legend().set_visible(False)
+                st.pyplot(fig)
 
     # 9. Análise de Importância de Características
     st.write("### Importância das características no modelo RandomForest")
@@ -156,4 +156,4 @@ if not alunos_data.empty:
     importance_virada = permutation_importance(rf_virada, X_test, y_test_virada, n_repeats=10, random_state=42)
 
     st.write(f"**Importância para PEDRA:** {dict(zip(X.columns, importance_pedra.importances_mean))}")
-    st.write
+    st.write(f"**Importância para PONTO_VIRADA:** {dict(zip(X.columns, importance_virada.importances_mean))}")

@@ -120,25 +120,26 @@ if not aluno_data.empty:
         fig, ax = plt.subplots(figsize=(8, 4))  # Diminuir o tamanho do gráfico
 
         # Plotar os anos até 2022 em azul
-        ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue', label='INDE')
+        ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue')
 
-        # Plotar a linha dourada de 2022 para 2023 e 2023 para 2024
-        ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='gold')
-        ax.plot([2023, 2024], [inde_2023, inde_2024], marker='o', linestyle='-', color='gold')
+        # Plotar a linha vermelha de 2022 para 2023 e 2023 para 2024
+        ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='red')
+        ax.plot([2023, 2024], [inde_2023, inde_2024], marker='o', linestyle='-', color='red')
 
         # Adicionar valores no gráfico
         for i in inde_history.index:
-            ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=12, ha='center', color='white')
+            ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=10, ha='center', color='white')  # Diminuir o tamanho da fonte
 
         # Configurar visual do gráfico
         ax.set_facecolor('#0E1117')
         fig.patch.set_facecolor('#0E1117')
-        ax.set_title(f'Evolução do INDE do Aluno {id_aluno}', fontsize=16, color='white')
-        ax.set_ylabel('INDE', fontsize=14, color='white')
-        ax.set_xlabel('Ano', fontsize=14, color='white')
+        ax.set_title(f'Evolução do INDE do Aluno {id_aluno}', fontsize=14, color='white')  # Diminuir o tamanho da fonte do título
+        ax.set_ylabel('INDE', fontsize=12, color='white')  # Diminuir o tamanho da fonte do rótulo
+        ax.set_xlabel('Ano', fontsize=12, color='white')  # Diminuir o tamanho da fonte do rótulo
         ax.set_xticks([2020, 2021, 2022, 2023, 2024])  # Exibir apenas os anos desejados
         ax.tick_params(colors='white')
-        ax.legend(loc='upper right')  # Simplesmente "INDE" na legenda
+        ax.yaxis.set_visible(False)  # Remover números laterais
+        ax.legend().set_visible(False)  # Remover a legenda
         st.pyplot(fig)
 
 else:

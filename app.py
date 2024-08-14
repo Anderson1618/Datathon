@@ -53,7 +53,7 @@ pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
 virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 
 # Criar interface no Streamlit
-st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023 e 2024")
+st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023")
 
 # Adicionar explicação sobre a acurácia
 st.write("""
@@ -78,18 +78,17 @@ if not aluno_data.empty:
     try:
         model = ARIMA(inde_series, order=(1, 1, 1))
         model_fit = model.fit()
-        forecast = model_fit.forecast(steps=2)  # Prever 2023 e 2024
+        forecast = model_fit.forecast(steps=1)  # Prever apenas 2023
 
-        # Previsões de INDE para 2023 e 2024
+        # Previsão de INDE para 2023
         inde_2023 = forecast.iloc[0]
-        inde_2024 = forecast.iloc[1]
 
         # Calcular erro (RMSE) do modelo ARIMA
         arima_rmse = np.sqrt(mean_squared_error(inde_series, model_fit.predict(start=inde_series.index[0], end=inde_series.index[-1])))
 
     except Exception as e:
         st.error(f"Erro ao gerar previsão ARIMA: {e}")
-        inde_2023, inde_2024 = None, None
+        inde_2023 = None
         arima_rmse = None
 
     # Fazer previsões para PEDRA e PONTO_VIRADA
@@ -112,19 +111,18 @@ if not aluno_data.empty:
     st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
     st.write(f"**O aluno estará em ponto de virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
 
-    if inde_2023 is not None and inde_2024 is not None:
-        # Concatenação das previsões com a série existente
-        inde_history = pd.concat([inde_series, pd.Series([inde_2023, inde_2024], index=[2023, 2024])])
+    if inde_2023 is not None:
+        # Concatenação da previsão com a série existente
+        inde_history = pd.concat([inde_series, pd.Series([inde_2023], index=[2023])])
 
-        st.write("### Evolução do INDE do aluno (2020-2024)")
+        st.write("### Evolução do INDE do aluno (2020-2023)")
         fig, ax = plt.subplots(figsize=(8, 4))  # Diminuir o tamanho do gráfico
 
         # Plotar os anos até 2022 em azul
         ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue')
 
-        # Plotar a linha vermelha de 2022 para 2023 e 2023 para 2024
+        # Plotar a linha vermelha de 2022 para 2023
         ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='red')
-        ax.plot([2023, 2024], [inde_2023, inde_2024], marker='o', linestyle='-', color='red')
 
         # Adicionar valores no gráfico
         for i in inde_history.index:
@@ -136,7 +134,7 @@ if not aluno_data.empty:
         ax.set_title(f'Evolução do INDE do Aluno {id_aluno}', fontsize=14, color='white')  # Diminuir o tamanho da fonte do título
         ax.set_ylabel('INDE', fontsize=12, color='white')  # Diminuir o tamanho da fonte do rótulo
         ax.set_xlabel('Ano', fontsize=12, color='white')  # Diminuir o tamanho da fonte do rótulo
-        ax.set_xticks([2020, 2021, 2022, 2023, 2024])  # Exibir apenas os anos desejados
+        ax.set_xticks([2020, 2021, 2022, 2023])  # Exibir apenas os anos desejados
         ax.tick_params(colors='white')
         ax.yaxis.set_visible(False)  # Remover números laterais
         ax.legend().set_visible(False)  # Remover a legenda
@@ -144,4 +142,5 @@ if not aluno_data.empty:
 
 else:
     st.write("Nenhum dado encontrado para o ID de aluno selecionado.")
+
 

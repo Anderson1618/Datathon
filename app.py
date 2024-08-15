@@ -71,22 +71,22 @@ X_train, X_test, y_train_pedra, y_test_pedra, y_train_virada, y_test_virada, sca
 # Treinar modelos com caching
 rf_pedra, rf_virada = treinar_modelos(X_train, y_train_pedra, y_train_virada)
 
-# Fazer previsões e inverter a transformação para garantir que os tipos e valores estejam corretos
+# Fazer previsões
 pedra_predicoes = rf_pedra.predict(X_test)
 virada_predicoes = rf_virada.predict(X_test)
 
-# Verifique as dimensões e tipos de dados antes de calcular a acurácia
-try:
-    if len(y_test_pedra) != len(pedra_predicoes):
-        raise ValueError("Dimensões não correspondem entre y_test_pedra e pedra_predicoes")
+# Verificar os tipos de dados e valores únicos
+st.write(f"Tipos de y_test_pedra: {type(y_test_pedra)}, pedra_predicoes: {type(pedra_predicoes)}")
+st.write(f"Valores únicos em y_test_pedra: {np.unique(y_test_pedra)}")
+st.write(f"Valores únicos em pedra_predicoes: {np.unique(pedra_predicoes)}")
 
-    # Calcular acurácia dos modelos de PEDRA e PONTO_VIRADA
-    pedra_accuracy = accuracy_score(y_test_pedra, pedra_predicoes)
-    virada_accuracy = accuracy_score(y_test_virada, virada_predicoes)
+# Inverter a transformação usando LabelEncoder para garantir que as previsões estejam no formato correto
+y_test_pedra_original = label_encoder_pedra.inverse_transform(y_test_pedra)
+pedra_predicoes_original = label_encoder_pedra.inverse_transform(pedra_predicoes)
 
-except ValueError as e:
-    st.error(f"Erro ao calcular a acurácia: {e}")
-    st.stop()
+# Calcular acurácia
+pedra_accuracy = accuracy_score(y_test_pedra_original, pedra_predicoes_original)
+virada_accuracy = accuracy_score(y_test_virada, virada_predicoes)
 
 # Customização do tema da aplicação
 st.set_page_config(page_title="Previsão Acadêmica", layout="wide", initial_sidebar_state="expanded")

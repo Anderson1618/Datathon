@@ -78,7 +78,7 @@ A acurácia apresentada para os modelos de previsão de Pedra, Ponto de Virada e
 
 # 1. Análise Comparativa de Desempenho
 st.write("## Comparação entre Alunos Indicados para Bolsa e Não Indicados")
-bolsa_comparacao = alunos_completos.groupby('INDICADO_BOLSA').agg({
+bolsa_comparacao = alunos_completos.groupby('INDICADO_BOLSA_2022').agg({
     'INDE': 'mean',
     'IAA': 'mean',
     'IEG': 'mean'

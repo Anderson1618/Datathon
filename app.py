@@ -18,7 +18,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from statsmodels.tsa.arima.model import ARIMA
 
-# Explicação sobre a ONG Passos Mágicos
+#ONG Passos Mágicos
 st.title("ONG Passos Mágicos")
 st.write("""
 A **ONG Passos Mágicos** é uma organização dedicada a apoiar crianças e adolescentes em situação de vulnerabilidade, proporcionando-lhes oportunidades de desenvolvimento pessoal, educacional e profissional. Através de diversas atividades e programas, a ONG visa transformar vidas e construir um futuro mais promissor para os jovens que atende.
@@ -26,26 +26,26 @@ A **ONG Passos Mágicos** é uma organização dedicada a apoiar crianças e ado
 Este projeto, em colaboração com a ONG, visa monitorar e prever indicadores acadêmicos cruciais, como o Índice de Desenvolvimento Educacional (INDE), a resiliência representada pela Pedra, e os pontos de virada, onde mudanças significativas no desempenho podem ocorrer. Essas previsões ajudam a identificar e intervir de forma mais eficaz na trajetória educacional dos alunos, garantindo que recebam o apoio necessário no momento certo.
 """)
 
-# Carregar e preparar os dados
+# Carregamento de dados
 file_path = 'BD_modelo.csv'
 df = pd.read_csv(file_path)
 
-# Filtrar alunos que possuem dados suficientes para análise (exemplo: dados de 2022 e anteriores)
+#Limpeza de dados
 alunos_completos = df.groupby('ID_ALUNO').filter(lambda x: x['ano'].max() == 2022)
 
-# Codificar variáveis categóricas
+# Variaveis categóricas
 label_encoder_pedra = LabelEncoder()
 label_encoder_virada = LabelEncoder()
 
 alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['PEDRA'])
 alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
 
-# Separar as features e os targets
+# Separando as features e os targets
 X = alunos_completos[['ANO_INGRESSO', 'INDE', 'ano']]
 y_pedra = alunos_completos['PEDRA']
 y_virada = alunos_completos['PONTO_VIRADA']
 
-# Dividir os dados para calcular acurácia
+# Dividir od dados para treinamento
 X_train, X_test, y_train_pedra, y_test_pedra = train_test_split(X, y_pedra, test_size=0.2, random_state=42)
 _, _, y_train_virada, y_test_virada = train_test_split(X, y_virada, test_size=0.2, random_state=42)
 
@@ -54,21 +54,21 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# Treinar os modelos para PEDRA e PONTO_VIRADA
+# Treinar os modelos
 rf_pedra = RandomForestClassifier(random_state=42)
 rf_pedra.fit(X_train, y_train_pedra)
 
 rf_virada = RandomForestClassifier(random_state=42)
 rf_virada.fit(X_train, y_train_virada)
 
-# Calcular acurácia dos modelos de PEDRA e PONTO_VIRADA
+# Calcular acurácia dos modelos
 pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
 virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 
-# Criar interface no Streamlit
+# Interface no Streamlit
 st.title("Projeção de Pedra, Ponto de Virada e INDE para 2023")
 
-# Análise Comparativa de Múltiplos Alunos
+# Análise Comparativa de Alunos
 st.write("## Análise Comparativa de Múltiplos Alunos")
 comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
 
@@ -83,7 +83,7 @@ if not alunos_data.empty:
 
     st.write("---")
 
-    # Correlação entre INDE, PEDRA, e PONTO_VIRADA
+    # Correlação
     st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
     st.write("""
     ### O que é a Correlação?
@@ -118,7 +118,7 @@ if not alunos_data.empty:
         z=correlation.values,
         x=correlation.columns,
         y=correlation.columns,
-        colorscale='Blues'  # Ajuste de cor para combinar com os gráficos de linhas
+        colorscale='Blues'
     ))
     fig_corr.update_layout(title='Mapa de Calor das Correlações', xaxis_nticks=36)
     st.plotly_chart(fig_corr)
@@ -159,14 +159,14 @@ if not alunos_data.empty:
             inde_2023 = None
             arima_rmse = None
 
-        # Fazer projeções para PEDRA e PONTO_VIRADA
+        # Projeções
         input_data = np.array([[aluno_data['ANO_INGRESSO'].values[0], inde_series.iloc[-1], 2023]])
         input_data_scaled = scaler.transform(input_data)
 
         pred_pedra = rf_pedra.predict(input_data_scaled)
         pred_virada = rf_virada.predict(input_data_scaled)
 
-        # Traduzir a projeção de pedra para o valor original
+        # Valores originais
         pedra_pred = label_encoder_pedra.inverse_transform(pred_pedra)
 
         with cols[index]:
@@ -199,8 +199,8 @@ if not alunos_data.empty:
 
     st.write("---")
 
-# Simulação de Cenários 'What-If'
-st.write("## Simulação de Cenários 'What-If'")
+# Simulação de Cenário
+st.write("## Simulação de Cenários")
 st.write("""
 ### O que é a Simulação de Cenários?
 
@@ -220,15 +220,15 @@ Essa funcionalidade é crucial para ajudar a ONG Passos Mágicos a tomar decisõ
 sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
 sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=5.0, min_value=0.0, max_value=10.0)
 
-# Preparar dados de entrada simulados
+# Entrada simulados
 input_simulation = np.array([[alunos_completos.loc[alunos_completos['ID_ALUNO'] == sim_id, 'ANO_INGRESSO'].values[0], sim_inde, 2023]])
 input_simulation_scaled = scaler.transform(input_simulation)
 
-# Fazer projeções com os dados simulados
+# Projeções com os dados simulados
 sim_pred_pedra = rf_pedra.predict(input_simulation_scaled)
 sim_pred_virada = rf_virada.predict(input_simulation_scaled)
 
-# Traduzir a projeção de pedra para o valor original
+# valor original
 sim_pedra_pred = label_encoder_pedra.inverse_transform(sim_pred_pedra)
 
 # Exibir resultados da simulação
@@ -252,6 +252,6 @@ if 'arima_rmse' in locals() and arima_rmse is not None:
 
 st.write("---")
 
-# Opcional: Mostrar os dados brutos (para análise detalhada)
+# Dados brutos (para análise detalhada)
 if st.checkbox("Mostrar dados brutos dos alunos"):
     st.write(alunos_completos)

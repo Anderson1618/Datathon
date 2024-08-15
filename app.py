@@ -168,27 +168,6 @@ if not alunos_data.empty:
                 ax.legend().set_visible(False)  # Remover a legenda
                 st.pyplot(fig)
 
-# Adicionar gráficos de distribuição para as variáveis INDE, IAA, IEG
-st.write("## Distribuição das Variáveis de Desempenho")
-
-fig, ax = plt.subplots(1, 3, figsize=(18, 5))
-
-# Distribuição do INDE
-ax[0].hist(alunos_completos['INDE'], bins=20, color='blue', alpha=0.7)
-ax[0].set_title('Distribuição do INDE')
-ax[0].set_xlabel('INDE')
-
-# Distribuição do IAA
-ax[1].hist(alunos_completos['IAA'], bins=20, color='green', alpha=0.7)
-ax[1].set_title('Distribuição do IAA')
-ax[1].set_xlabel('IAA')
-
-# Distribuição do IEG
-ax[2].hist(alunos_completos['IEG'], bins=20, color='red', alpha=0.7)
-ax[2].set_title('Distribuição do IEG')
-ax[2].set_xlabel('IEG')
-
-st.pyplot(fig)
 
 # Conclusão e Análise Geral
 st.write("""

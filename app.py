@@ -17,14 +17,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 from statsmodels.tsa.arima.model import ARIMA
 
-# Cachear o carregamento dos dados para melhorar o desempenho
+# Cacheamento para melhorar o desempenho
 @st.cache_data
 def carregar_dados(file_path):
     df = pd.read_csv(file_path)
     alunos_completos = df.groupby('ID_ALUNO').filter(lambda x: x['ano'].max() == 2022)
     return alunos_completos
 
-# Cachear a função de treinamento de modelos para evitar processamento repetido
 @st.cache_resource
 def treinar_modelos(X_train, y_train_pedra, y_train_virada):
     param_grid = {
@@ -43,7 +42,6 @@ def treinar_modelos(X_train, y_train_pedra, y_train_virada):
 
     return rf_pedra, rf_virada
 
-# Cachear a transformação dos dados
 @st.cache_data
 def preparar_dados(alunos_completos):
     label_encoder_pedra = LabelEncoder()
@@ -73,9 +71,22 @@ X_train, X_test, y_train_pedra, y_test_pedra, y_train_virada, y_test_virada, sca
 # Treinar modelos com caching
 rf_pedra, rf_virada = treinar_modelos(X_train, y_train_pedra, y_train_virada)
 
-# Calcular acurácia dos modelos de PEDRA e PONTO_VIRADA
-pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
-virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
+# Fazer previsões e inverter a transformação para garantir que os tipos e valores estejam corretos
+pedra_predicoes = rf_pedra.predict(X_test)
+virada_predicoes = rf_virada.predict(X_test)
+
+# Verifique as dimensões e tipos de dados antes de calcular a acurácia
+try:
+    if len(y_test_pedra) != len(pedra_predicoes):
+        raise ValueError("Dimensões não correspondem entre y_test_pedra e pedra_predicoes")
+
+    # Calcular acurácia dos modelos de PEDRA e PONTO_VIRADA
+    pedra_accuracy = accuracy_score(y_test_pedra, pedra_predicoes)
+    virada_accuracy = accuracy_score(y_test_virada, virada_predicoes)
+
+except ValueError as e:
+    st.error(f"Erro ao calcular a acurácia: {e}")
+    st.stop()
 
 # Customização do tema da aplicação
 st.set_page_config(page_title="Previsão Acadêmica", layout="wide", initial_sidebar_state="expanded")

@@ -13,7 +13,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, mean_squared_error
-import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
 from statsmodels.tsa.arima.model import ARIMA
 
 # Carregar e preparar os dados
@@ -58,11 +59,14 @@ virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 # Criar interface no Streamlit
 st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023")
 
-# Adicionar explicação sobre a acurácia
+st.write("## Lógica de Acurácia e Métricas")
 st.write("""
-### Lógica de Acurácia e Métricas
-A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada é baseada nas previsões corretas feitas pelo modelo em comparação ao total de previsões. Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
+A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada é baseada nas previsões corretas feitas pelo modelo em comparação ao total de previsões.
+Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
 """)
+
+# Espaçamento
+st.write("---")
 
 # Análise Comparativa de Múltiplos Alunos
 comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
@@ -72,28 +76,24 @@ alunos_data = alunos_completos[alunos_completos['ID_ALUNO'].isin(comparar_ids)].
 
 # Gráficos de Tendências
 if not alunos_data.empty:
-    st.write("### Tendência do INDE ao longo do tempo para Alunos Selecionados")
-    fig, ax = plt.subplots()
-    for id_aluno in comparar_ids:
-        aluno_data = alunos_data[alunos_data['ID_ALUNO'] == id_aluno]
-        ax.plot(aluno_data['ano'], aluno_data['INDE'], marker='o', linestyle='-', label=f'Aluno {id_aluno}')
+    st.write("## Tendência do INDE ao longo do tempo para Alunos Selecionados")
+    fig = px.line(alunos_data, x='ano', y='INDE', color='ID_ALUNO', markers=True, title='Tendência do INDE ao longo do tempo')
+    st.plotly_chart(fig)
 
-    ax.set_title('Tendência do INDE ao longo do tempo')
-    ax.set_xlabel('Ano')
-    ax.set_ylabel('INDE')
-    ax.legend()
-    st.pyplot(fig)
+    st.write("---")
 
-    # Gráfico de correlação
+    st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
     correlation = alunos_completos[['INDE', 'PEDRA', 'PONTO_VIRADA']].corr()
-    fig_corr, ax_corr = plt.subplots()
-    cax = ax_corr.matshow(correlation, cmap='coolwarm')
-    fig_corr.colorbar(cax)
-    ax_corr.set_xticks(np.arange(len(correlation.columns)))
-    ax_corr.set_yticks(np.arange(len(correlation.columns)))
-    ax_corr.set_xticklabels(correlation.columns)
-    ax_corr.set_yticklabels(correlation.columns)
-    st.pyplot(fig_corr)
+    fig_corr = go.Figure(data=go.Heatmap(
+        z=correlation.values,
+        x=correlation.columns,
+        y=correlation.columns,
+        colorscale='Viridis'
+    ))
+    fig_corr.update_layout(title='Mapa de Calor das Correlações', xaxis_nticks=36)
+    st.plotly_chart(fig_corr)
+
+    st.write("---")
 
     cols = st.columns(len(comparar_ids))  # Criar colunas para exibir gráficos lado a lado
 
@@ -133,9 +133,6 @@ if not alunos_data.empty:
         with cols[index]:
             st.write(f"**Aluno {id_aluno}:**")
 
-            if arima_rmse is not None:
-                st.write(f"**RMSE para INDE:** **{arima_rmse:.2f}**")
-
             st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
             st.write(f"**Ponto de Virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
 
@@ -144,32 +141,25 @@ if not alunos_data.empty:
                 inde_history = pd.concat([inde_series, pd.Series([inde_2023], index=[2023])])
 
                 st.write(f"### Evolução do INDE (2020-2023)")
-                fig, ax = plt.subplots(figsize=(6, 3))
+                fig = go.Figure()
 
-                # Plotar os anos até 2022 em azul
-                ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue')
+                # Adicionar a série histórica de INDE
+                fig.add_trace(go.Scatter(x=inde_series.index, y=inde_series, mode='lines+markers', name='Histórico INDE'))
 
-                # Plotar a linha vermelha de 2022 para 2023
-                ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='red')
+                # Adicionar a previsão para 2023
+                fig.add_trace(go.Scatter(x=[2022, 2023], y=[inde_series.iloc[-1], inde_2023],
+                                         mode='lines+markers', name='Previsão 2023', line=dict(color='red')))
 
-                # Adicionar valores no gráfico
-                for i in inde_history.index:
-                    ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=10, ha='center', color='white')
+                fig.update_layout(title=f'Evolução do INDE Aluno {id_aluno}',
+                                  xaxis_title='Ano',
+                                  yaxis_title='INDE')
 
-                # Configurar visual do gráfico
-                ax.set_facecolor('#0E1117')
-                fig.patch.set_facecolor('#0E1117')
-                ax.set_title(f'INDE Aluno {id_aluno}', fontsize=14, color='white')
-                ax.set_ylabel('INDE', fontsize=12, color='white')
-                ax.set_xlabel('Ano', fontsize=12, color='white')
-                ax.set_xticks([2020, 2021, 2022, 2023])
-                ax.tick_params(colors='white')
-                ax.yaxis.set_visible(False)
-                ax.legend().set_visible(False)
-                st.pyplot(fig)
+                st.plotly_chart(fig)
 
-# 6. Predições Personalizadas - Cenários "What-If"
-st.write("### Simulação de Cenários 'What-If'")
+    st.write("---")
+
+# Predições Personalizadas - Cenários "What-If"
+st.write("## Simulação de Cenários 'What-If'")
 sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
 sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=50.0, min_value=0.0, max_value=100.0)
 
@@ -188,11 +178,18 @@ sim_pedra_pred = label_encoder_pedra.inverse_transform(sim_pred_pedra)
 st.write(f"**Previsão Simulada de Pedra para 2023:** **{sim_pedra_pred[0]}**")
 st.write(f"**Ponto de Virada em 2023 (Simulado):** **{'Sim' if sim_pred_virada[0] == 1 else 'Não'}**")
 
+st.write("---")
+
 # Mostrar Métricas dos Modelos no final do site
-st.write("### Métricas dos Modelos")
+st.write("## Métricas dos Modelos")
 
 st.write(f"**Acurácia para previsão de Pedra:** **{pedra_accuracy:.2f}**")
 st.write(f"**Acurácia para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
+
+if 'arima_rmse' in locals() and arima_rmse is not None:
+    st.write(f"**RMSE para previsão de INDE:** **{arima_rmse:.2f}**")
+
+st.write("---")
 
 # Opcional: Mostrar os dados brutos (para análise detalhada)
 if st.checkbox("Mostrar dados brutos dos alunos"):

@@ -95,6 +95,7 @@ Entender as correlações entre esses indicadores pode ajudar a ONG Passos Mági
 
 A análise das correlações também pode ajudar a identificar quais alunos estão em risco de enfrentar um ponto de virada negativo e precisar de intervenção imediata.
 """)
+
     correlation = alunos_completos[['INDE', 'PEDRA', 'PONTO_VIRADA']].corr()
     fig_corr = go.Figure(data=go.Heatmap(
         z=correlation.values,

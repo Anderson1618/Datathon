@@ -150,12 +150,13 @@ else:
             with cols[index]:
                 # 7. Mostrar acurácia dos modelos com resultados grifados
                 st.write(f"**Aluno {id_aluno}:**")
-                st.write(f"**Acurácia para previsão de Pedra:** **{pedra
                 st.write(f"**Acurácia para previsão de Pedra:** **{pedra_accuracy:.2f}**")
                 st.write(f"**Acurácia para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
                 st.write(f"**Acurácia para previsão de Bolsa:** **{bolsa_accuracy:.2f}**")
                 if arima_rmse is not None:
-                    st.write(f"**RMSE para INDE:** **{arima_rmse:.2f}**")
+                    st.write(f"**RMSE para INDE:** **{arima_rmse:.2f}
+
+                              st.write(f"**RMSE para INDE:** **{arima_rmse:.2f}**")
 
                 # Exibir resultados grifados
                 st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
@@ -201,4 +202,3 @@ st.write("""
 A tabela acima compara o desempenho médio de alunos indicados e não indicados para bolsa, utilizando variáveis como INDE, IAA e IEG. Essa análise permite entender melhor como essas métricas se relacionam com a probabilidade de um aluno ser indicado para bolsa.
 """)
 
-               

@@ -15,7 +15,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
-from fpdf import FPDF
 
 # Carregar e preparar os dados
 file_path = '/mnt/data/BD_final.csv.csv'
@@ -153,11 +152,4 @@ if not alunos_data.empty:
                 ax.set_xlabel('Ano', fontsize=12, color='white')
                 ax.set_xticks([2020, 2021, 2022, 2023])
                 ax.tick_params(colors='white')
-                ax.yaxis.set_visible(False)
-                ax.legend().set_visible(False)
-                st.pyplot(fig)
-
-                # 7. Alertas e Notificações
-                if inde_2023 < inde_series.mean():
-                    st.warning(f"Alerta: Previsão de INDE para 2023 ({inde_2023:.2f}) está abaixo da média histórica ({inde_series.mean():.2f}) para o aluno {id_aluno}.")
-
+                ax.yaxis.set

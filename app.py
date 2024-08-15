@@ -31,7 +31,7 @@ alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['
 alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
 
 # Separar as features e os targets
-X = alunos_completos[['ANO_INGRESSO', 'INDE', 'IAA', 'IEG', 'ano']]
+X = alunos_completos[['ANO_INGRESSO', 'INDE', 'ano']]
 y_pedra = alunos_completos['PEDRA']
 y_virada = alunos_completos['PONTO_VIRADA']
 
@@ -56,32 +56,13 @@ pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
 virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 
 # Criar interface no Streamlit
-st.title("Análise e Previsão de Desempenho dos Alunos")
+st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023")
 
 # Adicionar explicação sobre a acurácia
 st.write("""
 ### Lógica de Acurácia
 A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada é baseada na proporção de previsões corretas que o modelo faz em comparação ao total de previsões. Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
 """)
-
-# Análise de Correlação
-st.write("## Análise de Correlação")
-corr_matrix = BD_final.csv[['INDE', 'IAA', 'IEG', 'PEDRA', 'PONTO_VIRADA']].corr()
-
-# Plotar a matriz de correlação usando Matplotlib
-fig, ax = plt.subplots(figsize=(10, 6))
-cax = ax.matshow(corr_matrix, cmap='coolwarm')
-plt.xticks(range(len(corr_matrix.columns)), corr_matrix.columns, rotation=90)
-plt.yticks(range(len(corr_matrix.columns)), corr_matrix.columns)
-fig.colorbar(cax)
-for (i, j), val in np.ndenumerate(corr_matrix.values):
-    ax.text(j, i, f'{val:.2f}', ha='center', va='center', color='black')
-st.pyplot(fig)
-
-# Mostrar importância das features
-st.write("## Importância das Features para Previsão")
-feature_importances = pd.Series(rf_pedra.feature_importances_, index=['ANO_INGRESSO', 'INDE', 'IAA', 'IEG', 'ano'])
-st.bar_chart(feature_importances)
 
 # 3. Adicionar possibilidade de comparar múltiplos alunos
 comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
@@ -159,22 +140,11 @@ if not alunos_data.empty:
                 # Configurar visual do gráfico
                 ax.set_facecolor('#0E1117')
                 fig.patch.set_facecolor('#0E1117')
-                ax.set_title(f'Evolução do INDE do Aluno {id_aluno}', fontsize=14, color='white')
+                ax.set_title(f'INDE Aluno {id_aluno}', fontsize=14, color='white')
                 ax.set_ylabel('INDE', fontsize=12, color='white')
                 ax.set_xlabel('Ano', fontsize=12, color='white')
                 ax.set_xticks([2020, 2021, 2022, 2023])
                 ax.tick_params(colors='white')
-                ax.yaxis.set_visible(False)  # Remover números laterais
-                ax.legend().set_visible(False)  # Remover a legenda
+                ax.yaxis.set_visible(False)
+                ax.legend().set_visible(False)
                 st.pyplot(fig)
-
-
-# Conclusão e Análise Geral
-st.write("""
-## Conclusões e Análise Geral
-
-Com base nas análises realizadas, podemos observar como diferentes variáveis influenciam as previsões de Pedra e Ponto de Virada. A distribuição das variáveis de desempenho (INDE, IAA, IEG) também fornece insights sobre o comportamento dos alunos ao longo do tempo. 
-Os gráficos de evolução permitem comparar o desempenho individual dos alunos e identificar possíveis tendências ou pontos de melhoria.
-
-A importância das features identificadas pelo modelo RandomForest sugere quais fatores são mais críticos para prever o desempenho dos alunos, sendo útil para direcionar intervenções pedagógicas e administrativas.
-""")

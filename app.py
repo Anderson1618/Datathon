@@ -66,7 +66,7 @@ A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada 
 
 # Análise de Correlação
 st.write("## Análise de Correlação")
-corr_matrix = alunos_completos[['INDE', 'IAA', 'IEG', 'PEDRA', 'PONTO_VIRADA']].corr()
+corr_matrix = BD_final.csv[['INDE', 'IAA', 'IEG', 'PEDRA', 'PONTO_VIRADA']].corr()
 
 # Plotar a matriz de correlação usando Matplotlib
 fig, ax = plt.subplots(figsize=(10, 6))

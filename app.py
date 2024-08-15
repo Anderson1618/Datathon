@@ -156,8 +156,6 @@ else:
                 if arima_rmse is not None:
                     st.write(f"**RMSE para INDE:** **{arima_rmse:.2f}
 
-                              st.write(f"**RMSE para INDE:** **{arima_rmse:.2f}**")
-
                 # Exibir resultados grifados
                 st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
                 st.write(f"**Ponto de Virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")

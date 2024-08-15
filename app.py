@@ -17,6 +17,18 @@ import plotly.express as px
 import plotly.graph_objects as go
 from statsmodels.tsa.arima.model import ARIMA
 
+# Exibir a imagem da ONG no topo da página
+st.image('/mnt/data/Untitled.png', use_column_width=True)
+
+# Explicação sobre a ONG Passos Mágicos
+st.title("ONG Passos Mágicos")
+st.write("""
+A **ONG Passos Mágicos** é uma organização dedicada a apoiar crianças e adolescentes em situação de vulnerabilidade, proporcionando-lhes oportunidades de desenvolvimento pessoal, educacional e profissional. Através de diversas atividades e programas, a ONG visa transformar vidas e construir um futuro mais promissor para os jovens que atende.
+
+Este projeto, em colaboração com a ONG, visa monitorar e prever indicadores acadêmicos cruciais, como o Índice de Desenvolvimento Educacional (INDE), a resiliência representada pela Pedra, e os pontos de virada, onde mudanças significativas no desempenho podem ocorrer. Essas previsões ajudam a identificar e intervir de forma mais eficaz na trajetória educacional dos alunos, garantindo que recebam o apoio necessário no momento certo.
+""")
+
+# Continuar com o código existente para as previsões
 # Carregar e preparar os dados
 file_path = 'BD_modelo.csv'
 df = pd.read_csv(file_path)
@@ -189,3 +201,4 @@ st.write("---")
 # Opcional: Mostrar os dados brutos (para análise detalhada)
 if st.checkbox("Mostrar dados brutos dos alunos"):
     st.write(alunos_completos)
+

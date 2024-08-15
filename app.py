@@ -80,7 +80,21 @@ if not alunos_data.empty:
     fig = px.line(alunos_data, x='ano', y='INDE', color='ID_ALUNO', markers=True)
     st.plotly_chart(fig)
 
-    st.write("---")
+    st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
+st.write("""
+
+O mapa de calor (heatmap) apresentado a seguir mostra as correlações entre INDE, PEDRA e PONTO_VIRADA:
+
+- **Correlação Positiva**: Um valor positivo indica que, à medida que um indicador aumenta, o outro também tende a aumentar. Por exemplo, se houver uma correlação positiva alta entre INDE e PEDRA, isso sugere que alunos com alto desempenho acadêmico (INDE) também tendem a mostrar alta resiliência (PEDRA).
+- **Correlação Negativa**: Um valor negativo indica que, à medida que um indicador aumenta, o outro tende a diminuir. Por exemplo, se houver uma correlação negativa entre PEDRA e PONTO_VIRADA, isso pode sugerir que alunos mais resilientes têm menos probabilidade de experimentar uma mudança abrupta em seu desempenho.
+- **Correlação Próxima de Zero**: Indica pouca ou nenhuma relação linear entre os indicadores. Isso significa que as mudanças em um indicador não têm um efeito previsível sobre o outro.
+
+### Utilidade da Correlação
+
+Entender as correlações entre esses indicadores pode ajudar a ONG Passos Mágicos a identificar padrões e tomar decisões mais informadas. Por exemplo, se a ONG perceber que a resiliência (PEDRA) está fortemente correlacionada com o desempenho acadêmico (INDE), pode concentrar seus esforços em fortalecer a resiliência dos alunos para melhorar seu desempenho geral.
+
+A análise das correlações também pode ajudar a identificar quais alunos estão em risco de enfrentar um ponto de virada negativo e precisar de intervenção imediata.
+""")
 
     st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
     correlation = alunos_completos[['INDE', 'PEDRA', 'PONTO_VIRADA']].corr()

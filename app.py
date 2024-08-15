@@ -17,6 +17,66 @@ import plotly.express as px
 import plotly.graph_objects as go
 from statsmodels.tsa.arima.model import ARIMA
 
+# Cachear o carregamento dos dados para melhorar o desempenho
+@st.cache_data
+def carregar_dados(file_path):
+    df = pd.read_csv(file_path)
+    alunos_completos = df.groupby('ID_ALUNO').filter(lambda x: x['ano'].max() == 2022)
+    return alunos_completos
+
+# Cachear a função de treinamento de modelos para evitar processamento repetido
+@st.cache_resource
+def treinar_modelos(X_train, y_train_pedra, y_train_virada):
+    param_grid = {
+        'n_estimators': [100],
+        'max_depth': [None],
+        'min_samples_split': [2],
+        'min_samples_leaf': [1]
+    }
+    grid_search_pedra = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=5)
+    grid_search_pedra.fit(X_train, y_train_pedra)
+    rf_pedra = grid_search_pedra.best_estimator_
+
+    grid_search_virada = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=5)
+    grid_search_virada.fit(X_train, y_train_virada)
+    rf_virada = grid_search_virada.best_estimator_
+
+    return rf_pedra, rf_virada
+
+# Cachear a transformação dos dados
+@st.cache_data
+def preparar_dados(alunos_completos):
+    label_encoder_pedra = LabelEncoder()
+    label_encoder_virada = LabelEncoder()
+
+    alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['PEDRA'])
+    alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
+
+    X = alunos_completos[['ANO_INGRESSO', 'INDE', 'ano']]
+    y_pedra = alunos_completos['PEDRA']
+    y_virada = alunos_completos['PONTO_VIRADA']
+
+    X_train, X_test, y_train_pedra, y_test_pedra = train_test_split(X, y_pedra, test_size=0.2, random_state=42)
+    _, _, y_train_virada, y_test_virada = train_test_split(X, y_virada, test_size=0.2, random_state=42)
+
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    return X_train, X_test, y_train_pedra, y_test_pedra, y_train_virada, y_test_virada, scaler, label_encoder_pedra, label_encoder_virada
+
+# Carregar dados e preparar
+file_path = 'BD_modelo.csv'
+alunos_completos = carregar_dados(file_path)
+X_train, X_test, y_train_pedra, y_test_pedra, y_train_virada, y_test_virada, scaler, label_encoder_pedra, label_encoder_virada = preparar_dados(alunos_completos)
+
+# Treinar modelos com caching
+rf_pedra, rf_virada = treinar_modelos(X_train, y_train_pedra, y_train_virada)
+
+# Calcular acurácia dos modelos de PEDRA e PONTO_VIRADA
+pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
+virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
+
 # Customização do tema da aplicação
 st.set_page_config(page_title="Previsão Acadêmica", layout="wide", initial_sidebar_state="expanded")
 
@@ -39,58 +99,6 @@ exibir_ajuda()
 # Barra lateral de navegação
 st.sidebar.title("Navegação")
 opcao = st.sidebar.radio("Ir para", ["Visão Geral", "Análise Comparativa", "Simulação 'What-If'", "Métricas dos Modelos"])
-
-# Carregar e preparar os dados
-file_path = 'BD_modelo.csv'
-df = pd.read_csv(file_path)
-
-# Filtrar alunos que possuem dados suficientes para análise (exemplo: dados de 2022 e anteriores)
-alunos_completos = df.groupby('ID_ALUNO').filter(lambda x: x['ano'].max() == 2022)
-
-# Codificar variáveis categóricas
-label_encoder_pedra = LabelEncoder()
-label_encoder_virada = LabelEncoder()
-
-alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['PEDRA'])
-alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
-
-# Separar as features e os targets
-X = alunos_completos[['ANO_INGRESSO', 'INDE', 'ano']]
-y_pedra = alunos_completos['PEDRA']
-y_virada = alunos_completos['PONTO_VIRADA']
-
-# Dividir os dados para calcular acurácia
-X_train, X_test, y_train_pedra, y_test_pedra = train_test_split(X, y_pedra, test_size=0.2, random_state=42)
-_, _, y_train_virada, y_test_virada = train_test_split(X, y_virada, test_size=0.2, random_state=42)
-
-# Padronizar as features
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
-
-# Aprimoramento dos Modelos: Grid Search para hiperparametrização
-param_grid = {
-    'n_estimators': [100, 200],
-    'max_depth': [None, 10, 20],
-    'min_samples_split': [2, 5],
-    'min_samples_leaf': [1, 2]
-}
-
-grid_search_pedra = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=5)
-grid_search_pedra.fit(X_train, y_train_pedra)
-rf_pedra = grid_search_pedra.best_estimator_
-
-grid_search_virada = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=5)
-grid_search_virada.fit(X_train, y_train_virada)
-rf_virada = grid_search_virada.best_estimator_
-
-# Treinar os modelos finais
-rf_pedra.fit(X_train, y_train_pedra)
-rf_virada.fit(X_train, y_train_virada)
-
-# Calcular acurácia dos modelos de PEDRA e PONTO_VIRADA
-pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
-virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 
 # Visão Geral
 if opcao == "Visão Geral":
@@ -148,18 +156,18 @@ elif opcao == "Métricas dos Modelos":
     st.write(f"**Acurácia para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
 
     # Análise Preditiva Avançada: Adicionando explicações
-    import shap
+    if st.button("Gerar Explicações com SHAP"):
+        import shap
+        st.write("### Importância das Variáveis")
+        explainer_pedra = shap.TreeExplainer(rf_pedra)
+        shap_values_pedra = explainer_pedra.shap_values(X_test)
+        shap.summary_plot(shap_values_pedra, X_test, feature_names=['ANO_INGRESSO', 'INDE', 'ano'], plot_type="bar")
+        st.pyplot(bbox_inches='tight')
 
-    st.write("### Importância das Variáveis")
-    explainer_pedra = shap.TreeExplainer(rf_pedra)
-    shap_values_pedra = explainer_pedra.shap_values(X_test)
-    shap.summary_plot(shap_values_pedra, X_test, feature_names=['ANO_INGRESSO', 'INDE', 'ano'], plot_type="bar")
-    st.pyplot(bbox_inches='tight')
-
-    explainer_virada = shap.TreeExplainer(rf_virada)
-    shap_values_virada = explainer_virada.shap_values(X_test)
-    shap.summary_plot(shap_values_virada, X_test, feature_names=['ANO_INGRESSO', 'INDE', 'ano'], plot_type="bar")
-    st.pyplot(bbox_inches='tight')
+        explainer_virada = shap.TreeExplainer(rf_virada)
+        shap_values_virada = explainer_virada.shap_values(X_test)
+        shap.summary_plot(shap_values_virada, X_test, feature_names=['ANO_INGRESSO', 'INDE', 'ano'], plot_type="bar")
+        st.pyplot(bbox_inches='tight')
 
     if 'arima_rmse' in locals() and arima_rmse is not None:
         st.write(f"**RMSE para previsão de INDE:** **{arima_rmse:.2f}**")

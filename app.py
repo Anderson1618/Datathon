@@ -87,18 +87,7 @@ if not alunos_data.empty:
     # Correlação entre INDE, PEDRA, e PONTO_VIRADA
     st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
     st.write("""
-    ### O que é a Correlação?
-
-    A correlação é uma medida estatística que indica a força e a direção do relacionamento entre duas ou mais variáveis. Na educação, compreender a correlação entre diferentes indicadores de desempenho dos alunos pode fornecer insights valiosos sobre como esses indicadores se influenciam mutuamente.
-
-    ### Interpretação das Correlações
-
-    Nesta seção, exploramos a correlação entre três indicadores críticos:
-
-    1. **INDE (Índice de Desenvolvimento Educacional)**: Mede o desempenho acadêmico geral do aluno.
-    2. **PEDRA**: Representa a resiliência do aluno, ou seja, a sua capacidade de superar desafios e persistir nos estudos.
-    3. **PONTO_VIRADA**: Indica um ponto crítico onde pode ocorrer uma mudança significativa no desempenho do aluno, seja positiva ou negativa.
-
+    
     ### Como Ler o Mapa de Calor
 
     O mapa de calor (heatmap) apresentado a seguir mostra as correlações entre INDE, PEDRA e PONTO_VIRADA:
@@ -191,11 +180,6 @@ if not alunos_data.empty:
 # Simulação de Cenários 'What-If'
 st.write("## Simulação de Cenários 'What-If'")
 st.write("""
-### O que é a Simulação de Cenários?
-
-A Simulação de Cenários 'What-If' permite explorar como diferentes condições podem impactar os resultados acadêmicos dos alunos. Ao ajustar a projeção do Índice de Desenvolvimento Educacional (INDE) para um ano específico, podemos prever como essa alteração pode afetar outros indicadores, como a resiliência (representada pela Pedra) e a ocorrência de um ponto de virada no desempenho do aluno.
-
-#### Como utilizar a Simulação?
 
 1. **Selecione o ID do Aluno**: Escolha um aluno específico da lista de IDs disponíveis.
 2. **Projeção de INDE para 2023**: Ajuste o valor do INDE para 2023, que representa sua projeção sobre o desempenho do aluno para o próximo ano. Esse valor pode variar entre 0 e 10.

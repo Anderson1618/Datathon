@@ -18,108 +18,111 @@ import plotly.express as px
 import plotly.graph_objects as go
 from statsmodels.tsa.arima.model import ARIMA
 
-# ONG Passos Mágicos
+# Explicação sobre a ONG Passos Mágicos
 st.title("ONG Passos Mágicos")
 st.write("""
 A **ONG Passos Mágicos** é uma organização dedicada a apoiar crianças e adolescentes em situação de vulnerabilidade, proporcionando-lhes oportunidades de desenvolvimento pessoal, educacional e profissional. Através de diversas atividades e programas, a ONG visa transformar vidas e construir um futuro mais promissor para os jovens que atende.
 
-Este projeto, em colaboração entre FIAP e a  ONG, visa monitorar e prever indicadores acadêmicos cruciais, como o Índice de Desenvolvimento Educacional (INDE), a resiliência representada pela Pedra, e os pontos de virada, onde mudanças significativas no desempenho podem ocorrer. Essas projeções ajudam a identificar e intervir de forma mais eficaz na trajetória educacional dos alunos, garantindo que recebam o apoio necessário no momento certo.
+Este projeto, em colaboração com a ONG, visa monitorar e prever indicadores acadêmicos cruciais, como o Índice de Desenvolvimento Educacional (INDE), a resiliência representada pela Pedra, e os pontos de virada, onde mudanças significativas no desempenho podem ocorrer. Essas previsões ajudam a identificar e intervir de forma mais eficaz na trajetória educacional dos alunos, garantindo que recebam o apoio necessário no momento certo.
 """)
 
-# Carga de dados
+# Continuar com o código existente para as previsões
+# Carregar e preparar os dados
 file_path = 'BD_modelo.csv'
 df = pd.read_csv(file_path)
 
-# Limpeza dos dados
+# Filtrar alunos que possuem dados suficientes para análise (exemplo: dados de 2022 e anteriores)
 alunos_completos = df.groupby('ID_ALUNO').filter(lambda x: x['ano'].max() == 2022)
 
-# Codificação de variáveis categóricas
+# Codificar variáveis categóricas
 label_encoder_pedra = LabelEncoder()
 label_encoder_virada = LabelEncoder()
 
 alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['PEDRA'])
 alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
 
-# Separando as features e os targets
+# Separar as features e os targets
 X = alunos_completos[['ANO_INGRESSO', 'INDE', 'ano']]
 y_pedra = alunos_completos['PEDRA']
 y_virada = alunos_completos['PONTO_VIRADA']
 
-# Dados divididos em treino e teste
+# Dividir os dados para calcular acurácia
 X_train, X_test, y_train_pedra, y_test_pedra = train_test_split(X, y_pedra, test_size=0.2, random_state=42)
 _, _, y_train_virada, y_test_virada = train_test_split(X, y_virada, test_size=0.2, random_state=42)
 
-# Padronização
+# Padronizar as features
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# Treino dos modelos
+# Treinar os modelos para PEDRA e PONTO_VIRADA
 rf_pedra = RandomForestClassifier(random_state=42)
 rf_pedra.fit(X_train, y_train_pedra)
 
 rf_virada = RandomForestClassifier(random_state=42)
 rf_virada.fit(X_train, y_train_virada)
 
-# Calculo de acurácia dos modelos de PEDRA e PONTO_VIRADA
+# Calcular acurácia dos modelos de PEDRA e PONTO_VIRADA
 pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
 virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 
-# Interface Streamlit
+# Criar interface no Streamlit
 st.title("Projeção de Pedra, Ponto de Virada e INDE para 2023")
 
-# Análise Comparativa de Alunos
+# Análise Comparativa de Múltiplos Alunos
 st.write("## Análise Comparativa de Múltiplos Alunos")
 comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
 
+# Filtrar os dados dos alunos selecionados
 alunos_data = alunos_completos[alunos_completos['ID_ALUNO'].isin(comparar_ids)].sort_values(by='ano')
 
-# Gráficos
+# Gráficos de Tendências
 if not alunos_data.empty:
     st.write("## Tendência do INDE ao longo do tempo para Alunos Selecionados")
     fig = px.line(alunos_data, x='ano', y='INDE', color='ID_ALUNO', markers=True)
     st.plotly_chart(fig)
 
-   st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
-st.write("""
-### O que é a Correlação?
+    st.write("---")
 
-A correlação é uma medida estatística que indica a força e a direção do relacionamento entre duas ou mais variáveis. Na educação, compreender a correlação entre diferentes indicadores de desempenho dos alunos pode fornecer insights valiosos sobre como esses indicadores se influenciam mutuamente.
+    # Correlação entre INDE, PEDRA, e PONTO_VIRADA
+    st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
+    st.write("""
+    ### O que é a Correlação?
 
-### Interpretação das Correlações
+    A correlação é uma medida estatística que indica a força e a direção do relacionamento entre duas ou mais variáveis. Na educação, compreender a correlação entre diferentes indicadores de desempenho dos alunos pode fornecer insights valiosos sobre como esses indicadores se influenciam mutuamente.
 
-Nesta seção, exploramos a correlação entre três indicadores críticos:
+    ### Interpretação das Correlações
 
-1. **INDE (Índice de Desenvolvimento Educacional)**: Mede o desempenho acadêmico geral do aluno.
-2. **PEDRA**: Representa a resiliência do aluno, ou seja, a sua capacidade de superar desafios e persistir nos estudos.
-3. **PONTO_VIRADA**: Indica um ponto crítico onde pode ocorrer uma mudança significativa no desempenho do aluno, seja positiva ou negativa.
+    Nesta seção, exploramos a correlação entre três indicadores críticos:
 
-### Como Ler o Mapa de Calor
+    1. **INDE (Índice de Desenvolvimento Educacional)**: Mede o desempenho acadêmico geral do aluno.
+    2. **PEDRA**: Representa a resiliência do aluno, ou seja, a sua capacidade de superar desafios e persistir nos estudos.
+    3. **PONTO_VIRADA**: Indica um ponto crítico onde pode ocorrer uma mudança significativa no desempenho do aluno, seja positiva ou negativa.
 
-O mapa de calor (heatmap) apresentado a seguir mostra as correlações entre INDE, PEDRA e PONTO_VIRADA:
+    ### Como Ler o Mapa de Calor
 
-- **Correlação Positiva**: Um valor positivo indica que, à medida que um indicador aumenta, o outro também tende a aumentar. Por exemplo, se houver uma correlação positiva alta entre INDE e PEDRA, isso sugere que alunos com alto desempenho acadêmico (INDE) também tendem a mostrar alta resiliência (PEDRA).
-- **Correlação Negativa**: Um valor negativo indica que, à medida que um indicador aumenta, o outro tende a diminuir. Por exemplo, se houver uma correlação negativa entre PEDRA e PONTO_VIRADA, isso pode sugerir que alunos mais resilientes têm menos probabilidade de experimentar uma mudança abrupta em seu desempenho.
-- **Correlação Próxima de Zero**: Indica pouca ou nenhuma relação linear entre os indicadores. Isso significa que as mudanças em um indicador não têm um efeito previsível sobre o outro.
+    O mapa de calor (heatmap) apresentado a seguir mostra as correlações entre INDE, PEDRA e PONTO_VIRADA:
 
-### Utilidade da Correlação
+    - **Correlação Positiva**: Um valor positivo indica que, à medida que um indicador aumenta, o outro também tende a aumentar. Por exemplo, se houver uma correlação positiva alta entre INDE e PEDRA, isso sugere que alunos com alto desempenho acadêmico (INDE) também tendem a mostrar alta resiliência (PEDRA).
+    - **Correlação Negativa**: Um valor negativo indica que, à medida que um indicador aumenta, o outro tende a diminuir. Por exemplo, se houver uma correlação negativa entre PEDRA e PONTO_VIRADA, isso pode sugerir que alunos mais resilientes têm menos probabilidade de experimentar uma mudança abrupta em seu desempenho.
+    - **Correlação Próxima de Zero**: Indica pouca ou nenhuma relação linear entre os indicadores. Isso significa que as mudanças em um indicador não têm um efeito previsível sobre o outro.
 
-Entender as correlações entre esses indicadores pode ajudar a ONG Passos Mágicos a identificar padrões e tomar decisões mais informadas. Por exemplo, se a ONG perceber que a resiliência (PEDRA) está fortemente correlacionada com o desempenho acadêmico (INDE), pode concentrar seus esforços em fortalecer a resiliência dos alunos para melhorar seu desempenho geral.
+    ### Utilidade da Correlação
 
-A análise das correlações também pode ajudar a identificar quais alunos estão em risco de enfrentar um ponto de virada negativo e precisar de intervenção imediata.
-""")
+    Entender as correlações entre esses indicadores pode ajudar a ONG Passos Mágicos a identificar padrões e tomar decisões mais informadas. Por exemplo, se a ONG perceber que a resiliência (PEDRA) está fortemente correlacionada com o desempenho acadêmico (INDE), pode concentrar seus esforços em fortalecer a resiliência dos alunos para melhorar seu desempenho geral.
 
-# Exibição do gráfico de correlação
-correlation = alunos_completos[['INDE', 'PEDRA', 'PONTO_VIRADA']].corr()
-fig_corr = go.Figure(data=go.Heatmap(
-    z=correlation.values,
-    x=correlation.columns,
-    y=correlation.columns,
-    colorscale='Blues'  # Ajuste de cor para combinar com os gráficos de linhas
-))
-fig_corr.update_layout(title='Mapa de Calor das Correlações', xaxis_nticks=36)
-st.plotly_chart(fig_corr)
+    A análise das correlações também pode ajudar a identificar quais alunos estão em risco de enfrentar um ponto de virada negativo e precisar de intervenção imediata.
+    """)
 
+    correlation = alunos_completos[['INDE', 'PEDRA', 'PONTO_VIRADA']].corr()
+    fig_corr = go.Figure(data=go.Heatmap(
+        z=correlation.values,
+        x=correlation.columns,
+        y=correlation.columns,
+        colorscale='Blues'  # Ajuste de cor para combinar com os gráficos de linhas
+    ))
+    fig_corr.update_layout(title='Mapa de Calor das Correlações', xaxis_nticks=36)
+    st.plotly_chart(fig_corr)
 
     st.write("---")
 
@@ -140,7 +143,7 @@ st.plotly_chart(fig_corr)
             # Projeção de INDE para 2023
             inde_2023 = forecast.iloc[0]
 
-            # Erro (RMSE) do modelo ARIMA
+            # Calcular erro (RMSE) do modelo ARIMA
             arima_rmse = np.sqrt(mean_squared_error(inde_series, model_fit.predict(start=inde_series.index[0], end=inde_series.index[-1])))
 
         except Exception as e:
@@ -185,7 +188,7 @@ st.plotly_chart(fig_corr)
 
     st.write("---")
 
-# Simulação de Cenários
+# Simulação de Cenários 'What-If'
 st.write("## Simulação de Cenários 'What-If'")
 st.write("""
 ### O que é a Simulação de Cenários?
@@ -202,17 +205,22 @@ A Simulação de Cenários 'What-If' permite explorar como diferentes condiçõe
 
 Essa funcionalidade é crucial para ajudar a ONG Passos Mágicos a tomar decisões informadas sobre onde e como intervir no desenvolvimento educacional de cada aluno, garantindo que cada um deles receba o apoio necessário para alcançar seu pleno potencial.
 """)
-sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
-sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=0.0, min_value=0.0, max_value=10.0)
 
-# Entrada de dados simulados
+sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
+sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=5.0, min_value=0.0, max_value=10.0)
+
+# Preparar dados de entrada simulados
 input_simulation = np.array([[alunos_completos.loc[alunos_completos['ID_ALUNO'] == sim_id, 'ANO_INGRESSO'].values[0], sim_inde, 2023]])
 input_simulation_scaled = scaler.transform(input_simulation)
 
-# Projeções com os dados simulados
+# Fazer projeções com os dados simulados
 sim_pred_pedra = rf_pedra.predict(input_simulation_scaled)
 sim_pred_virada = rf_virada.predict(input_simulation_scaled)
+
+# Traduzir a projeção de pedra para o valor original
 sim_pedra_pred = label_encoder_pedra.inverse_transform(sim_pred_pedra)
+
+# Exibir resultados da simulação
 st.write(f"**Projeção Simulada de Pedra para 2023:** **{sim_pedra_pred[0]}**")
 st.write(f"**Ponto de Virada em 2023 (Simulado):** **{'Sim' if sim_pred_virada[0] == 1 else 'Não'}**")
 
@@ -233,9 +241,10 @@ if 'arima_rmse' in locals() and arima_rmse is not None:
 
 st.write("---")
 
-# Dados brutos (para análise detalhada)
+# Opcional: Mostrar os dados brutos (para análise detalhada)
 if st.checkbox("Mostrar dados brutos dos alunos"):
     st.write(alunos_completos)
+
 
 
 

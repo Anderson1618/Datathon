@@ -110,6 +110,7 @@ elif opcao == "Análise Comparativa":
         
         st.write("## Tendência do INDE ao longo do tempo")
         fig = px.line(alunos_data, x='ano', y='INDE', color='ID_ALUNO', markers=True)
+        fig.update_layout(height=500)  # Aumentar o tamanho do gráfico
         st.plotly_chart(fig, use_container_width=True)
         
         st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")

@@ -14,6 +14,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
+import seaborn as sns
 from statsmodels.tsa.arima.model import ARIMA
 
 # Carregar e preparar os dados
@@ -31,7 +32,7 @@ alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['
 alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
 
 # Separar as features e os targets
-X = alunos_completos[['ANO_INGRESSO', 'INDE', 'ano']]
+X = alunos_completos[['ANO_INGRESSO', 'INDE', 'IAA', 'IEG', 'ano']]
 y_pedra = alunos_completos['PEDRA']
 y_virada = alunos_completos['PONTO_VIRADA']
 
@@ -56,13 +57,23 @@ pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
 virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 
 # Criar interface no Streamlit
-st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023")
+st.title("Análise e Previsão de Desempenho dos Alunos")
 
 # Adicionar explicação sobre a acurácia
 st.write("""
 ### Lógica de Acurácia
 A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada é baseada na proporção de previsões corretas que o modelo faz em comparação ao total de previsões. Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
 """)
+
+# Análise de Correlação
+st.write("## Análise de Correlação")
+corr_matrix = alunos_completos[['INDE', 'IAA', 'IEG', 'PEDRA', 'PONTO_VIRADA']].corr()
+st.write(sns.heatmap(corr_matrix, annot=True, cmap='coolwarm'))
+
+# Mostrar importância das features
+st.write("## Importância das Features para Previsão")
+feature_importances = pd.Series(rf_pedra.feature_importances_, index=['ANO_INGRESSO', 'INDE', 'IAA', 'IEG', 'ano'])
+st.bar_chart(feature_importances)
 
 # 3. Adicionar possibilidade de comparar múltiplos alunos
 comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
@@ -148,3 +159,36 @@ if not alunos_data.empty:
                 ax.yaxis.set_visible(False)
                 ax.legend().set_visible(False)
                 st.pyplot(fig)
+
+# Adicionar gráficos de distribuição para as variáveis INDE, IAA, IEG
+st.write("## Distribuição das Variáveis de Desempenho")
+
+fig, ax = plt.subplots(1, 3, figsize=(18, 5))
+
+# Distribuição do INDE
+sns.histplot(alunos_completos['INDE'], kde=True, ax=ax[0], color='blue')
+ax[0].set_title('Distribuição do INDE')
+ax[0].set_xlabel('INDE')
+
+# Distribuição do IAA
+sns.histplot(alunos_completos['IAA'], kde=True, ax=ax[1], color='green')
+ax[1].set_title('Distribuição do IAA')
+ax[1].set_xlabel('IAA')
+
+# Distribuição do IEG
+sns.histplot(alunos_completos['IEG'], kde=True, ax=ax[2], color='red')
+ax[2].set_title('Distribuição do IEG')
+ax[2].set_xlabel('IEG')
+
+st.pyplot(fig)
+
+# Conclusão e Análise Geral
+st.write("""
+## Conclusões e Análise Geral
+
+Com base nas análises realizadas, podemos observar como diferentes variáveis influenciam as previsões de Pedra e Ponto de Virada. A distribuição das variáveis de desempenho (INDE, IAA, IEG) também fornece insights sobre o comportamento dos alunos ao longo do tempo. 
+Os gráficos de evolução permitem comparar o desempenho individual dos alunos e identificar possíveis tendências ou pontos de melhoria.
+
+A importância das features identificadas pelo modelo RandomForest sugere quais fatores são mais críticos para prever o desempenho dos alunos, sendo útil para direcionar intervenções pedagógicas e administrativas.
+""")
+

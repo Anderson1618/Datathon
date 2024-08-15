@@ -154,7 +154,7 @@ else:
                 st.write(f"**Acurácia para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
                 st.write(f"**Acurácia para previsão de Bolsa:** **{bolsa_accuracy:.2f}**")
                 if arima_rmse is not None:
-                    st.write(f"**RMSE para INDE:** **{arima_rmse:.2f}
+                    st.write(f"**RMSE para INDE:** **{arima_rmse:.2f}**")
 
                 # Exibir resultados grifados
                 st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")

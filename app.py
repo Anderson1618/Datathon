@@ -30,7 +30,7 @@ label_encoder_bolsa = LabelEncoder()
 
 alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['PEDRA'])
 alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
-alunos_completos['INDICADO_BOLSA_2022'] = label_encoder_bolsa.fit_transform(alunos_completos['INDICADO_BOLSA'])
+alunos_completos['INDICADO_BOLSA_2022'] = label_encoder_bolsa.fit_transform(alunos_completos['INDICADO_BOLSA_2022'])
 
 # Separar as features e os targets
 X = alunos_completos[['ANO_INGRESSO', 'INDE', 'IAA', 'IEG', 'ano']]

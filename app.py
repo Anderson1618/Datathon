@@ -190,8 +190,7 @@ st.write("---")
 st.write("## Lógica de Acurácia e Métricas")
 st.write("""
 A acurácia apresentada para os modelos de projeção de Pedra e Ponto de Virada é baseada nas projeções corretas feitas pelo modelo em comparação ao total de projeções.
-Para o modelo ARIMA de projeção de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores projetados pelo modelo e os valores reais, indicando a precisão do modelo.
-""")
+Para o modelo ARIMA de projeção de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores projetados pelo modelo e os valores reais, indicando a precisão do modelo.""")
 
 st.write(f"**Acurácia para projeção de Pedra:** **{pedra_accuracy:.2f}**")
 st.write(f"**Acurácia para projeção de Ponto de Virada:** **{virada_accuracy:.2f}**")

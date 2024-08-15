@@ -80,8 +80,21 @@ if not alunos_data.empty:
     fig = px.line(alunos_data, x='ano', y='INDE', color='ID_ALUNO', markers=True)
     st.plotly_chart(fig)
 
-    st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
+   st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
 st.write("""
+### O que é a Correlação?
+
+A correlação é uma medida estatística que indica a força e a direção do relacionamento entre duas ou mais variáveis. Na educação, compreender a correlação entre diferentes indicadores de desempenho dos alunos pode fornecer insights valiosos sobre como esses indicadores se influenciam mutuamente.
+
+### Interpretação das Correlações
+
+Nesta seção, exploramos a correlação entre três indicadores críticos:
+
+1. **INDE (Índice de Desenvolvimento Educacional)**: Mede o desempenho acadêmico geral do aluno.
+2. **PEDRA**: Representa a resiliência do aluno, ou seja, a sua capacidade de superar desafios e persistir nos estudos.
+3. **PONTO_VIRADA**: Indica um ponto crítico onde pode ocorrer uma mudança significativa no desempenho do aluno, seja positiva ou negativa.
+
+### Como Ler o Mapa de Calor
 
 O mapa de calor (heatmap) apresentado a seguir mostra as correlações entre INDE, PEDRA e PONTO_VIRADA:
 
@@ -96,15 +109,17 @@ Entender as correlações entre esses indicadores pode ajudar a ONG Passos Mági
 A análise das correlações também pode ajudar a identificar quais alunos estão em risco de enfrentar um ponto de virada negativo e precisar de intervenção imediata.
 """)
 
-    correlation = alunos_completos[['INDE', 'PEDRA', 'PONTO_VIRADA']].corr()
-    fig_corr = go.Figure(data=go.Heatmap(
-        z=correlation.values,
-        x=correlation.columns,
-        y=correlation.columns,
-        colorscale='Blues'  # Ajuste de cor para combinar com os gráficos de linhas
-    ))
-    fig_corr.update_layout(title='Mapa de Calor das Correlações', xaxis_nticks=36)
-    st.plotly_chart(fig_corr)
+# Exibição do gráfico de correlação
+correlation = alunos_completos[['INDE', 'PEDRA', 'PONTO_VIRADA']].corr()
+fig_corr = go.Figure(data=go.Heatmap(
+    z=correlation.values,
+    x=correlation.columns,
+    y=correlation.columns,
+    colorscale='Blues'  # Ajuste de cor para combinar com os gráficos de linhas
+))
+fig_corr.update_layout(title='Mapa de Calor das Correlações', xaxis_nticks=36)
+st.plotly_chart(fig_corr)
+
 
     st.write("---")
 

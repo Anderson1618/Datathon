@@ -30,13 +30,13 @@ label_encoder_bolsa = LabelEncoder()
 
 alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['PEDRA'])
 alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
-alunos_completos['INDICADO_BOLSA'] = label_encoder_bolsa.fit_transform(alunos_completos['INDICADO_BOLSA'])
+alunos_completos['INDICADO_BOLSA_2022'] = label_encoder_bolsa.fit_transform(alunos_completos['INDICADO_BOLSA'])
 
 # Separar as features e os targets
 X = alunos_completos[['ANO_INGRESSO', 'INDE', 'IAA', 'IEG', 'ano']]
 y_pedra = alunos_completos['PEDRA']
 y_virada = alunos_completos['PONTO_VIRADA']
-y_bolsa = alunos_completos['INDICADO_BOLSA']
+y_bolsa = alunos_completos['INDICADO_BOLSA_2022']
 
 # Dividir os dados para calcular acurácia
 X_train_pedra, X_test_pedra, y_train_pedra, y_test_pedra = train_test_split(X, y_pedra, test_size=0.2, random_state=42)

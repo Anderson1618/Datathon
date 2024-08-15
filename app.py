@@ -57,18 +57,46 @@ pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
 virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 
 # Criar interface no Streamlit
-st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023")
+st.title("Projeção de Pedra, Ponto de Virada e INDE para 2023")
 
+st.write("## Simulação de Cenários 'What-If'")
+sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
+sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=5.0, min_value=0.0, max_value=10.0)
+
+# Preparar dados de entrada simulados
+input_simulation = np.array([[alunos_completos.loc[alunos_completos['ID_ALUNO'] == sim_id, 'ANO_INGRESSO'].values[0], sim_inde, 2023]])
+input_simulation_scaled = scaler.transform(input_simulation)
+
+# Fazer projeções com os dados simulados
+sim_pred_pedra = rf_pedra.predict(input_simulation_scaled)
+sim_pred_virada = rf_virada.predict(input_simulation_scaled)
+
+# Traduzir a projeção de pedra para o valor original
+sim_pedra_pred = label_encoder_pedra.inverse_transform(sim_pred_pedra)
+
+# Exibir resultados da simulação
+st.write(f"**Projeção Simulada de Pedra para 2023:** **{sim_pedra_pred[0]}**")
+st.write(f"**Ponto de Virada em 2023 (Simulado):** **{'Sim' if sim_pred_virada[0] == 1 else 'Não'}**")
+
+st.write("---")
+
+# Mostrar Métricas dos Modelos no final da seção 'What-If'
 st.write("## Lógica de Acurácia e Métricas")
 st.write("""
-A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada é baseada nas previsões corretas feitas pelo modelo em comparação ao total de previsões.
-Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
+A acurácia apresentada para os modelos de projeção de Pedra e Ponto de Virada é baseada nas projeções corretas feitas pelo modelo em comparação ao total de projeções.
+Para o modelo ARIMA de projeção de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores projetados pelo modelo e os valores reais, indicando a precisão do modelo.
 """)
 
-# Espaçamento
+st.write(f"**Acurácia para projeção de Pedra:** **{pedra_accuracy:.2f}**")
+st.write(f"**Acurácia para projeção de Ponto de Virada:** **{virada_accuracy:.2f}**")
+
+if 'arima_rmse' in locals() and arima_rmse is not None:
+    st.write(f"**RMSE para projeção de INDE:** **{arima_rmse:.2f}**")
+
 st.write("---")
 
 # Análise Comparativa de Múltiplos Alunos
+st.write("## Análise Comparativa de Múltiplos Alunos")
 comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
 
 # Filtrar os dados dos alunos selecionados
@@ -77,7 +105,7 @@ alunos_data = alunos_completos[alunos_completos['ID_ALUNO'].isin(comparar_ids)].
 # Gráficos de Tendências
 if not alunos_data.empty:
     st.write("## Tendência do INDE ao longo do tempo para Alunos Selecionados")
-    fig = px.line(alunos_data, x='ano', y='INDE', color='ID_ALUNO', markers=True, title='Tendência do INDE ao longo do tempo')
+    fig = px.line(alunos_data, x='ano', y='INDE', color='ID_ALUNO', markers=True)
     st.plotly_chart(fig)
 
     st.write("---")
@@ -100,44 +128,44 @@ if not alunos_data.empty:
     for index, id_aluno in enumerate(comparar_ids):
         aluno_data = alunos_data[alunos_data['ID_ALUNO'] == id_aluno]
 
-        # Preparar os dados do aluno para previsões
+        # Preparar os dados do aluno para projeções
         inde_series = aluno_data.set_index('ano')['INDE']
 
-        # Ajustar o modelo ARIMA para prever INDE
+        # Ajustar o modelo ARIMA para projetar INDE
         try:
             model = ARIMA(inde_series, order=(1, 1, 1))
             model_fit = model.fit()
-            forecast = model_fit.forecast(steps=1)  # Prever apenas 2023
+            forecast = model_fit.forecast(steps=1)  # Projetar apenas 2023
 
-            # Previsão de INDE para 2023
+            # Projeção de INDE para 2023
             inde_2023 = forecast.iloc[0]
 
             # Calcular erro (RMSE) do modelo ARIMA
             arima_rmse = np.sqrt(mean_squared_error(inde_series, model_fit.predict(start=inde_series.index[0], end=inde_series.index[-1])))
 
         except Exception as e:
-            st.error(f"Erro ao gerar previsão ARIMA para o aluno {id_aluno}: {e}")
+            st.error(f"Erro ao gerar projeção ARIMA para o aluno {id_aluno}: {e}")
             inde_2023 = None
             arima_rmse = None
 
-        # Fazer previsões para PEDRA e PONTO_VIRADA
+        # Fazer projeções para PEDRA e PONTO_VIRADA
         input_data = np.array([[aluno_data['ANO_INGRESSO'].values[0], inde_series.iloc[-1], 2023]])
         input_data_scaled = scaler.transform(input_data)
 
         pred_pedra = rf_pedra.predict(input_data_scaled)
         pred_virada = rf_virada.predict(input_data_scaled)
 
-        # Traduzir a previsão de pedra para o valor original
+        # Traduzir a projeção de pedra para o valor original
         pedra_pred = label_encoder_pedra.inverse_transform(pred_pedra)
 
         with cols[index]:
             st.write(f"**Aluno {id_aluno}:**")
 
-            st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
+            st.write(f"**Projeção de Pedra para 2023:** **{pedra_pred[0]}**")
             st.write(f"**Ponto de Virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
 
             if inde_2023 is not None:
-                # Concatenação da previsão com a série existente
+                # Concatenação da projeção com a série existente
                 inde_history = pd.concat([inde_series, pd.Series([inde_2023], index=[2023])])
 
                 fig = go.Figure()
@@ -145,9 +173,9 @@ if not alunos_data.empty:
                 # Adicionar a série histórica de INDE
                 fig.add_trace(go.Scatter(x=inde_series.index, y=inde_series, mode='lines+markers', name='Histórico INDE'))
 
-                # Adicionar a previsão para 2023
+                # Adicionar a projeção para 2023
                 fig.add_trace(go.Scatter(x=[2022, 2023], y=[inde_series.iloc[-1], inde_2023],
-                                         mode='lines+markers', name='Previsão 2023', line=dict(color='red')))
+                                         mode='lines+markers', name='Projeção 2023', line=dict(color='red')))
 
                 fig.update_layout(xaxis_title='Ano',
                                   yaxis_title='INDE',
@@ -156,39 +184,6 @@ if not alunos_data.empty:
                 st.plotly_chart(fig)
 
     st.write("---")
-
-# Predições Personalizadas - Cenários "What-If"
-st.write("## Simulação de Cenários 'What-If'")
-sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
-sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=50.0, min_value=0.0, max_value=100.0)
-
-# Preparar dados de entrada simulados
-input_simulation = np.array([[alunos_completos.loc[alunos_completos['ID_ALUNO'] == sim_id, 'ANO_INGRESSO'].values[0], sim_inde, 2023]])
-input_simulation_scaled = scaler.transform(input_simulation)
-
-# Fazer previsões com os dados simulados
-sim_pred_pedra = rf_pedra.predict(input_simulation_scaled)
-sim_pred_virada = rf_virada.predict(input_simulation_scaled)
-
-# Traduzir a previsão de pedra para o valor original
-sim_pedra_pred = label_encoder_pedra.inverse_transform(sim_pred_pedra)
-
-# Exibir resultados da simulação
-st.write(f"**Previsão Simulada de Pedra para 2023:** **{sim_pedra_pred[0]}**")
-st.write(f"**Ponto de Virada em 2023 (Simulado):** **{'Sim' if sim_pred_virada[0] == 1 else 'Não'}**")
-
-st.write("---")
-
-# Mostrar Métricas dos Modelos no final do site
-st.write("## Métricas dos Modelos")
-
-st.write(f"**Acurácia para previsão de Pedra:** **{pedra_accuracy:.2f}**")
-st.write(f"**Acurácia para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
-
-if 'arima_rmse' in locals() and arima_rmse is not None:
-    st.write(f"**RMSE para previsão de INDE:** **{arima_rmse:.2f}**")
-
-st.write("---")
 
 # Opcional: Mostrar os dados brutos (para análise detalhada)
 if st.checkbox("Mostrar dados brutos dos alunos"):

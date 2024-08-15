@@ -14,7 +14,6 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
-import seaborn as sns
 from statsmodels.tsa.arima.model import ARIMA
 
 # Carregar e preparar os dados
@@ -68,7 +67,16 @@ A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada 
 # Análise de Correlação
 st.write("## Análise de Correlação")
 corr_matrix = alunos_completos[['INDE', 'IAA', 'IEG', 'PEDRA', 'PONTO_VIRADA']].corr()
-st.write(sns.heatmap(corr_matrix, annot=True, cmap='coolwarm'))
+
+# Plotar a matriz de correlação usando Matplotlib
+fig, ax = plt.subplots(figsize=(10, 6))
+cax = ax.matshow(corr_matrix, cmap='coolwarm')
+plt.xticks(range(len(corr_matrix.columns)), corr_matrix.columns, rotation=90)
+plt.yticks(range(len(corr_matrix.columns)), corr_matrix.columns)
+fig.colorbar(cax)
+for (i, j), val in np.ndenumerate(corr_matrix.values):
+    ax.text(j, i, f'{val:.2f}', ha='center', va='center', color='black')
+st.pyplot(fig)
 
 # Mostrar importância das features
 st.write("## Importância das Features para Previsão")
@@ -151,13 +159,13 @@ if not alunos_data.empty:
                 # Configurar visual do gráfico
                 ax.set_facecolor('#0E1117')
                 fig.patch.set_facecolor('#0E1117')
-                ax.set_title(f'INDE Aluno {id_aluno}', fontsize=14, color='white')
+                ax.set_title(f'Evolução do INDE do Aluno {id_aluno}', fontsize=14, color='white')
                 ax.set_ylabel('INDE', fontsize=12, color='white')
                 ax.set_xlabel('Ano', fontsize=12, color='white')
                 ax.set_xticks([2020, 2021, 2022, 2023])
                 ax.tick_params(colors='white')
-                ax.yaxis.set_visible(False)
-                ax.legend().set_visible(False)
+                ax.yaxis.set_visible(False)  # Remover números laterais
+                ax.legend().set_visible(False)  # Remover a legenda
                 st.pyplot(fig)
 
 # Adicionar gráficos de distribuição para as variáveis INDE, IAA, IEG
@@ -166,17 +174,17 @@ st.write("## Distribuição das Variáveis de Desempenho")
 fig, ax = plt.subplots(1, 3, figsize=(18, 5))
 
 # Distribuição do INDE
-sns.histplot(alunos_completos['INDE'], kde=True, ax=ax[0], color='blue')
+ax[0].hist(alunos_completos['INDE'], bins=20, color='blue', alpha=0.7)
 ax[0].set_title('Distribuição do INDE')
 ax[0].set_xlabel('INDE')
 
 # Distribuição do IAA
-sns.histplot(alunos_completos['IAA'], kde=True, ax=ax[1], color='green')
+ax[1].hist(alunos_completos['IAA'], bins=20, color='green', alpha=0.7)
 ax[1].set_title('Distribuição do IAA')
 ax[1].set_xlabel('IAA')
 
 # Distribuição do IEG
-sns.histplot(alunos_completos['IEG'], kde=True, ax=ax[2], color='red')
+ax[2].hist(alunos_completos['IEG'], bins=20, color='red', alpha=0.7)
 ax[2].set_title('Distribuição do IEG')
 ax[2].set_xlabel('IEG')
 
@@ -191,4 +199,3 @@ Os gráficos de evolução permitem comparar o desempenho individual dos alunos 
 
 A importância das features identificadas pelo modelo RandomForest sugere quais fatores são mais críticos para prever o desempenho dos alunos, sendo útil para direcionar intervenções pedagógicas e administrativas.
 """)
-

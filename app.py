@@ -59,42 +59,6 @@ virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 # Criar interface no Streamlit
 st.title("Projeção de Pedra, Ponto de Virada e INDE para 2023")
 
-st.write("## Simulação de Cenários 'What-If'")
-sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
-sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=5.0, min_value=0.0, max_value=10.0)
-
-# Preparar dados de entrada simulados
-input_simulation = np.array([[alunos_completos.loc[alunos_completos['ID_ALUNO'] == sim_id, 'ANO_INGRESSO'].values[0], sim_inde, 2023]])
-input_simulation_scaled = scaler.transform(input_simulation)
-
-# Fazer projeções com os dados simulados
-sim_pred_pedra = rf_pedra.predict(input_simulation_scaled)
-sim_pred_virada = rf_virada.predict(input_simulation_scaled)
-
-# Traduzir a projeção de pedra para o valor original
-sim_pedra_pred = label_encoder_pedra.inverse_transform(sim_pred_pedra)
-
-# Exibir resultados da simulação
-st.write(f"**Projeção Simulada de Pedra para 2023:** **{sim_pedra_pred[0]}**")
-st.write(f"**Ponto de Virada em 2023 (Simulado):** **{'Sim' if sim_pred_virada[0] == 1 else 'Não'}**")
-
-st.write("---")
-
-# Mostrar Métricas dos Modelos no final da seção 'What-If'
-st.write("## Lógica de Acurácia e Métricas")
-st.write("""
-A acurácia apresentada para os modelos de projeção de Pedra e Ponto de Virada é baseada nas projeções corretas feitas pelo modelo em comparação ao total de projeções.
-Para o modelo ARIMA de projeção de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores projetados pelo modelo e os valores reais, indicando a precisão do modelo.
-""")
-
-st.write(f"**Acurácia para projeção de Pedra:** **{pedra_accuracy:.2f}**")
-st.write(f"**Acurácia para projeção de Ponto de Virada:** **{virada_accuracy:.2f}**")
-
-if 'arima_rmse' in locals() and arima_rmse is not None:
-    st.write(f"**RMSE para projeção de INDE:** **{arima_rmse:.2f}**")
-
-st.write("---")
-
 # Análise Comparativa de Múltiplos Alunos
 st.write("## Análise Comparativa de Múltiplos Alunos")
 comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
@@ -184,6 +148,43 @@ if not alunos_data.empty:
                 st.plotly_chart(fig)
 
     st.write("---")
+
+# Simulação de Cenários 'What-If'
+st.write("## Simulação de Cenários 'What-If'")
+sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
+sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=5.0, min_value=0.0, max_value=10.0)
+
+# Preparar dados de entrada simulados
+input_simulation = np.array([[alunos_completos.loc[alunos_completos['ID_ALUNO'] == sim_id, 'ANO_INGRESSO'].values[0], sim_inde, 2023]])
+input_simulation_scaled = scaler.transform(input_simulation)
+
+# Fazer projeções com os dados simulados
+sim_pred_pedra = rf_pedra.predict(input_simulation_scaled)
+sim_pred_virada = rf_virada.predict(input_simulation_scaled)
+
+# Traduzir a projeção de pedra para o valor original
+sim_pedra_pred = label_encoder_pedra.inverse_transform(sim_pred_pedra)
+
+# Exibir resultados da simulação
+st.write(f"**Projeção Simulada de Pedra para 2023:** **{sim_pedra_pred[0]}**")
+st.write(f"**Ponto de Virada em 2023 (Simulado):** **{'Sim' if sim_pred_virada[0] == 1 else 'Não'}**")
+
+st.write("---")
+
+# Lógica de Acurácia e Métricas
+st.write("## Lógica de Acurácia e Métricas")
+st.write("""
+A acurácia apresentada para os modelos de projeção de Pedra e Ponto de Virada é baseada nas projeções corretas feitas pelo modelo em comparação ao total de projeções.
+Para o modelo ARIMA de projeção de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores projetados pelo modelo e os valores reais, indicando a precisão do modelo.
+""")
+
+st.write(f"**Acurácia para projeção de Pedra:** **{pedra_accuracy:.2f}**")
+st.write(f"**Acurácia para projeção de Ponto de Virada:** **{virada_accuracy:.2f}**")
+
+if 'arima_rmse' in locals() and arima_rmse is not None:
+    st.write(f"**RMSE para projeção de INDE:** **{arima_rmse:.2f}**")
+
+st.write("---")
 
 # Opcional: Mostrar os dados brutos (para análise detalhada)
 if st.checkbox("Mostrar dados brutos dos alunos"):

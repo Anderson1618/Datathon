@@ -15,71 +15,78 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
+from fpdf import FPDF
 
 # Carregar e preparar os dados
-file_path = 'BD_modelo.csv'
-df = pd.read_csv(file_path)
+file_path = '/mnt/data/BD_final.csv.csv'
+df = pd.read_csv(file_path, delimiter=';')
 
-# Filtrar alunos que possuem dados suficientes para análise (exemplo: dados de 2022 e anteriores)
-alunos_completos = df.groupby('ID_ALUNO').filter(lambda x: x['ano'].max() == 2022)
+# Preenchimento de valores nulos
+df.fillna(0, inplace=True)
 
-# Codificar variáveis categóricas
+# Codificação de variáveis categóricas
 label_encoder_pedra = LabelEncoder()
 label_encoder_virada = LabelEncoder()
+label_encoder_bolsa = LabelEncoder()
 
-alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['PEDRA'])
-alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
+df['PEDRA_2020'] = label_encoder_pedra.fit_transform(df['PEDRA_2020'])
+df['PONTO_VIRADA_2022'] = label_encoder_virada.fit_transform(df['PONTO_VIRADA_2022'])
+df['INDICADO_BOLSA_2022'] = label_encoder_bolsa.fit_transform(df['INDICADO_BOLSA_2022'])
 
-# Separar as features e os targets
-X = alunos_completos[['ANO_INGRESSO', 'INDE', 'ano']]
-y_pedra = alunos_completos['PEDRA']
-y_virada = alunos_completos['PONTO_VIRADA']
+# Separação de features e target para "Indicação para Bolsa"
+features = df[['ANO_INGRESSO', 'INDE_2020', 'IAA_2020', 'IEG_2020', 'IDA_2020', 'PEDRA_2020']]
+target_bolsa = df['INDICADO_BOLSA_2022']
 
-# Dividir os dados para calcular acurácia
-X_train, X_test, y_train_pedra, y_test_pedra = train_test_split(X, y_pedra, test_size=0.2, random_state=42)
-_, _, y_train_virada, y_test_virada = train_test_split(X, y_virada, test_size=0.2, random_state=42)
+# Separação de features e target para "Ponto de Virada"
+target_virada = df['PONTO_VIRADA_2022']
 
-# Padronizar as features
+# Dividir os dados em treino e teste
+X_train_bolsa, X_test_bolsa, y_train_bolsa, y_test_bolsa = train_test_split(features, target_bolsa, test_size=0.2, random_state=42)
+X_train_virada, X_test_virada, y_train_virada, y_test_virada = train_test_split(features, target_virada, test_size=0.2, random_state=42)
+
+# Padronização das features
 scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+X_train_bolsa = scaler.fit_transform(X_train_bolsa)
+X_test_bolsa = scaler.transform(X_test_bolsa)
+X_train_virada = scaler.fit_transform(X_train_virada)
+X_test_virada = scaler.transform(X_test_virada)
 
-# Treinar os modelos para PEDRA e PONTO_VIRADA
-rf_pedra = RandomForestClassifier(random_state=42)
-rf_pedra.fit(X_train, y_train_pedra)
+# Treinamento dos modelos RandomForest
+rf_bolsa = RandomForestClassifier(random_state=42)
+rf_bolsa.fit(X_train_bolsa, y_train_bolsa)
 
 rf_virada = RandomForestClassifier(random_state=42)
-rf_virada.fit(X_train, y_train_virada)
+rf_virada.fit(X_train_virada, y_train_virada)
 
-# Calcular acurácia dos modelos de PEDRA e PONTO_VIRADA
-pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
-virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
+# Calcular acurácia dos modelos
+bolsa_accuracy = accuracy_score(y_test_bolsa, rf_bolsa.predict(X_test_bolsa))
+virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test_virada))
 
 # Criar interface no Streamlit
-st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023")
+st.title("Previsão de Bolsa, Ponto de Virada e INDE para 2023")
 
 # Adicionar explicação sobre a acurácia
 st.write("""
 ### Lógica de Acurácia
-A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada é baseada na proporção de previsões corretas que o modelo faz em comparação ao total de previsões. Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
+A acurácia apresentada para os modelos de previsão de Bolsa e Ponto de Virada é baseada na proporção de previsões corretas que o modelo faz em comparação ao total de previsões. Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
 """)
 
 # 3. Adicionar possibilidade de comparar múltiplos alunos
-comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
+comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", df['ID_ALUNO'].unique())
 
 # Filtrar os dados dos alunos selecionados
-alunos_data = alunos_completos[alunos_completos['ID_ALUNO'].isin(comparar_ids)].sort_values(by='ano')
+alunos_data = df[df['ID_ALUNO'].isin(comparar_ids)].sort_values(by='ANO_INGRESSO')
 
 # 5. Verificar se os dados do aluno estão disponíveis
 if not alunos_data.empty:
     cols = st.columns(len(comparar_ids))  # Criar colunas para exibir gráficos lado a lado
-    
+
     for index, id_aluno in enumerate(comparar_ids):
         aluno_data = alunos_data[alunos_data['ID_ALUNO'] == id_aluno]
 
         # Preparar os dados do aluno para previsões
         ano_ingresso = aluno_data['ANO_INGRESSO'].values[0]
-        inde_series = aluno_data.set_index('ano')['INDE']
+        inde_series = aluno_data.set_index('ANO_INGRESSO')['INDE_2020']
 
         # 6. Ajustar o modelo ARIMA para prever INDE
         try:
@@ -98,27 +105,28 @@ if not alunos_data.empty:
             inde_2023 = None
             arima_rmse = None
 
-        # Fazer previsões para PEDRA e PONTO_VIRADA
-        input_data = np.array([[ano_ingresso, inde_series.iloc[-1], 2023]])
+        # Fazer previsões para Bolsa e Ponto de Virada
+        input_data = np.array([[ano_ingresso, inde_series.iloc[-1], aluno_data['IAA_2020'].values[0], aluno_data['IEG_2020'].values[0], aluno_data['IDA_2020'].values[0], aluno_data['PEDRA_2020'].values[0]]])
         input_data_scaled = scaler.transform(input_data)
 
-        pred_pedra = rf_pedra.predict(input_data_scaled)
+        pred_bolsa = rf_bolsa.predict(input_data_scaled)
         pred_virada = rf_virada.predict(input_data_scaled)
 
-        # Traduzir a previsão de pedra para o valor original
-        pedra_pred = label_encoder_pedra.inverse_transform(pred_pedra)
+        # Traduzir as previsões para os valores originais
+        bolsa_pred = label_encoder_bolsa.inverse_transform(pred_bolsa)
+        virada_pred = label_encoder_virada.inverse_transform(pred_virada)
 
         with cols[index]:
             # 7. Mostrar acurácia dos modelos com resultados grifados
             st.write(f"**Aluno {id_aluno}:**")
-            st.write(f"**Acurácia para previsão de Pedra:** **{pedra_accuracy:.2f}**")
+            st.write(f"**Acurácia para previsão de Bolsa:** **{bolsa_accuracy:.2f}**")
             st.write(f"**Acurácia para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
             if arima_rmse is not None:
                 st.write(f"**RMSE para INDE:** **{arima_rmse:.2f}**")
 
             # Exibir resultados grifados
-            st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
-            st.write(f"**Ponto de Virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
+            st.write(f"**Previsão de Bolsa para 2023:** **{'Sim' if bolsa_pred[0] == 1 else 'Não'}**")
+            st.write(f"**Ponto de Virada em 2023:** **{'Sim' if virada_pred[0] == 1 else 'Não'}**")
 
             if inde_2023 is not None:
                 # Concatenação da previsão com a série existente
@@ -148,3 +156,8 @@ if not alunos_data.empty:
                 ax.yaxis.set_visible(False)
                 ax.legend().set_visible(False)
                 st.pyplot(fig)
+
+                # 7. Alertas e Notificações
+                if inde_2023 < inde_series.mean():
+                    st.warning(f"Alerta: Previsão de INDE para 2023 ({inde_2023:.2f}) está abaixo da média histórica ({inde_series.mean():.2f}) para o aluno {id_aluno}.")
+

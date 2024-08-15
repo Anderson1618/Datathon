@@ -158,9 +158,24 @@ if not alunos_data.empty:
     st.write("---")
 
 # Simulação de Cenários
-st.write("## Simulação de Cenários")
+st.write("## Simulação de Cenários 'What-If'")
+st.write("""
+### O que é a Simulação de Cenários?
+
+A Simulação de Cenários 'What-If' permite explorar como diferentes condições podem impactar os resultados acadêmicos dos alunos. Ao ajustar a projeção do Índice de Desenvolvimento Educacional (INDE) para um ano específico, podemos prever como essa alteração pode afetar outros indicadores, como a resiliência (representada pela Pedra) e a ocorrência de um ponto de virada no desempenho do aluno.
+
+#### Como utilizar a Simulação?
+
+1. **Selecione o ID do Aluno**: Escolha um aluno específico da lista de IDs disponíveis.
+2. **Projeção de INDE para 2023**: Ajuste o valor do INDE para 2023, que representa sua projeção sobre o desempenho do aluno para o próximo ano. Esse valor pode variar entre 0 e 10.
+3. **Interprete os Resultados**: Com base nos dados inseridos, a aplicação irá prever:
+   - **Pedra**: A probabilidade de que o aluno mantenha sua resiliência acadêmica.
+   - **Ponto de Virada**: A probabilidade de que o aluno experimente uma mudança significativa em seu desempenho.
+
+Essa funcionalidade é crucial para ajudar a ONG Passos Mágicos a tomar decisões informadas sobre onde e como intervir no desenvolvimento educacional de cada aluno, garantindo que cada um deles receba o apoio necessário para alcançar seu pleno potencial.
+""")
 sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
-sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=5.0, min_value=0.0, max_value=10.0)
+sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=0.0, min_value=0.0, max_value=10.0)
 
 # Entrada de dados simulados
 input_simulation = np.array([[alunos_completos.loc[alunos_completos['ID_ALUNO'] == sim_id, 'ANO_INGRESSO'].values[0], sim_inde, 2023]])

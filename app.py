@@ -16,12 +16,19 @@ from sklearn.metrics import accuracy_score, mean_squared_error
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 
-# Carregar e preparar os dados
-file_path = 'BD_modelo.csv'
-df = pd.read_csv(file_path)
+# Carregar as bases de dados
+file_path_modelo = 'BD_modelo.csv'
+file_path_final = 'BD_final.csv.csv'
+
+df_modelo = pd.read_csv(file_path_modelo)
+df_final = pd.read_csv(file_path_final, delimiter=';')
+
+# Verificar as colunas disponíveis
+st.write("Colunas disponíveis no BD_modelo:", df_modelo.columns)
+st.write("Colunas disponíveis no BD_final:", df_final.columns)
 
 # Filtrar alunos que possuem dados suficientes para análise (exemplo: dados de 2022 e anteriores)
-alunos_completos = df.groupby('ID_ALUNO').filter(lambda x: x['ano'].max() == 2022)
+alunos_completos = df_modelo.groupby('ID_ALUNO').filter(lambda x: x['ano'].max() == 2022)
 
 # Codificar variáveis categóricas
 label_encoder_pedra = LabelEncoder()
@@ -31,6 +38,10 @@ label_encoder_bolsa = LabelEncoder()
 alunos_completos['PEDRA'] = label_encoder_pedra.fit_transform(alunos_completos['PEDRA'])
 alunos_completos['PONTO_VIRADA'] = label_encoder_virada.fit_transform(alunos_completos['PONTO_VIRADA'])
 alunos_completos['INDICADO_BOLSA_2022'] = label_encoder_bolsa.fit_transform(alunos_completos['INDICADO_BOLSA_2022'])
+
+# Adicionar a coluna de indicação de bolsa do df_final ao alunos_completos
+df_final_relevante = df_final[['ID_ALUNO', 'INDICADO_BOLSA_2022']]
+alunos_completos = pd.merge(alunos_completos, df_final_relevante, on='ID_ALUNO', how='left')
 
 # Separar as features e os targets
 X = alunos_completos[['ANO_INGRESSO', 'INDE', 'IAA', 'IEG', 'ano']]
@@ -151,15 +162,8 @@ if not alunos_data.empty:
                 inde_history = pd.concat([inde_series, pd.Series([inde_2023], index=[2023])])
 
                 st.write(f"### Evolução do INDE (2020-2023)")
-                fig, ax = plt.subplots(figsize=(6, 3))  # Ajustar o tamanho do gráfico
-
-                # 8. Plotar os anos até 2022 em azul
-                ax.plot(inde_history.index[:len(inde_series)], inde_history.iloc[:len(inde_series)], marker='o', linestyle='-', color='blue')
-
-                # Plotar a linha vermelha de 2022 para 2023
-                ax.plot([2022, 2023], [inde_series.loc[2022], inde_2023], marker='o', linestyle='-', color='red')
-
-                               # Adicionar valores no gráfico
+                fig, ax = plt.subplots(figsize=(6, 3))  #
+                # Adicionar valores no gráfico
                 for i in inde_history.index:
                     ax.text(i, inde_history.loc[i], f'{inde_history.loc[i]:.2f}', fontsize=10, ha='center', color='white')
 
@@ -178,7 +182,7 @@ if not alunos_data.empty:
                 # 7. Alertas e Notificações
                 if inde_2023 < inde_series.mean():
                     st.warning(f"Alerta: Previsão de INDE para 2023 ({inde_2023:.2f}) está abaixo da média histórica ({inde_series.mean():.2f}) para o aluno {id_aluno}.")
-                    
+
 # Adicionar explicação sobre a comparação de desempenho de bolsas
 st.write("""
 ### Explicação sobre a Comparação de Desempenho

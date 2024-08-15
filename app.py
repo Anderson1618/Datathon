@@ -26,7 +26,6 @@ A **ONG Passos Mágicos** é uma organização dedicada a apoiar crianças e ado
 Este projeto, em colaboração com a ONG, visa monitorar e prever indicadores acadêmicos cruciais, como o Índice de Desenvolvimento Educacional (INDE), a resiliência representada pela Pedra, e os pontos de virada, onde mudanças significativas no desempenho podem ocorrer. Essas previsões ajudam a identificar e intervir de forma mais eficaz na trajetória educacional dos alunos, garantindo que recebam o apoio necessário no momento certo.
 """)
 
-# Continuar com o código existente para as previsões
 # Carregar e preparar os dados
 file_path = 'BD_modelo.csv'
 df = pd.read_csv(file_path)
@@ -126,6 +125,15 @@ if not alunos_data.empty:
 
     st.write("---")
 
+    # Título e explicação para os gráficos de projeção de INDE
+    st.write("## Projeção do INDE para 2023")
+    st.write("""
+    **Projeção do INDE para 2023:**
+    Os gráficos a seguir mostram a evolução do Índice de Desenvolvimento Educacional (INDE) ao longo dos últimos anos para os alunos selecionados, 
+    incluindo a projeção para 2023 com base nos dados anteriores. O INDE é um indicador chave do desempenho acadêmico do aluno, e a projeção para 2023 
+    fornece uma visão sobre a tendência futura, permitindo intervenções estratégicas para apoiar o sucesso acadêmico contínuo.
+    """)
+
     cols = st.columns(len(comparar_ids))  # Criar colunas para exibir gráficos lado a lado
 
     for index, id_aluno in enumerate(comparar_ids):
@@ -188,14 +196,6 @@ if not alunos_data.empty:
 
                 # Exibir gráfico
                 st.plotly_chart(fig)
-
-                # Adicionar explicação sobre a projeção
-                st.write(f"""
-                **Projeção do INDE para 2023:**
-                Este gráfico mostra a evolução do Índice de Desenvolvimento Educacional (INDE) ao longo dos últimos anos para o aluno {id_aluno}, 
-                incluindo a projeção para 2023 com base nos dados anteriores. O INDE é um indicador chave do desempenho acadêmico do aluno, 
-                e a projeção para 2023 fornece uma visão sobre a tendência futura, permitindo intervenções estratégicas para apoiar o sucesso acadêmico contínuo.
-                """)
 
     st.write("---")
 

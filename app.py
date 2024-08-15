@@ -11,11 +11,34 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score, mean_squared_error
 import plotly.express as px
 import plotly.graph_objects as go
 from statsmodels.tsa.arima.model import ARIMA
+
+# Customização do tema da aplicação
+st.set_page_config(page_title="Previsão Acadêmica", layout="wide", initial_sidebar_state="expanded")
+
+# Função para exibir a seção de ajuda
+def exibir_ajuda():
+    st.sidebar.title("Ajuda")
+    st.sidebar.info("""
+    **Previsão de Pedra, Ponto de Virada e INDE:**
+    - **PEDRA**: Indicador de desempenho acadêmico que mede a resiliência do aluno em continuar no curso.
+    - **PONTO_VIRADA**: Identifica o ponto em que um aluno pode mudar seu desempenho significativamente.
+    - **INDE**: Índice que mede o desempenho acadêmico geral do aluno.
+    
+    **Navegação:**
+    Use a barra lateral para explorar diferentes funcionalidades da aplicação.
+    """)
+
+# Exibir a seção de ajuda na barra lateral
+exibir_ajuda()
+
+# Barra lateral de navegação
+st.sidebar.title("Navegação")
+opcao = st.sidebar.radio("Ir para", ["Visão Geral", "Análise Comparativa", "Simulação 'What-If'", "Métricas dos Modelos"])
 
 # Carregar e preparar os dados
 file_path = 'BD_modelo.csv'
@@ -45,151 +68,102 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# Treinar os modelos para PEDRA e PONTO_VIRADA
-rf_pedra = RandomForestClassifier(random_state=42)
-rf_pedra.fit(X_train, y_train_pedra)
+# Aprimoramento dos Modelos: Grid Search para hiperparametrização
+param_grid = {
+    'n_estimators': [100, 200],
+    'max_depth': [None, 10, 20],
+    'min_samples_split': [2, 5],
+    'min_samples_leaf': [1, 2]
+}
 
-rf_virada = RandomForestClassifier(random_state=42)
+grid_search_pedra = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=5)
+grid_search_pedra.fit(X_train, y_train_pedra)
+rf_pedra = grid_search_pedra.best_estimator_
+
+grid_search_virada = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=5)
+grid_search_virada.fit(X_train, y_train_virada)
+rf_virada = grid_search_virada.best_estimator_
+
+# Treinar os modelos finais
+rf_pedra.fit(X_train, y_train_pedra)
 rf_virada.fit(X_train, y_train_virada)
 
 # Calcular acurácia dos modelos de PEDRA e PONTO_VIRADA
 pedra_accuracy = accuracy_score(y_test_pedra, rf_pedra.predict(X_test))
 virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 
-# Criar interface no Streamlit
-st.title("Previsão de Pedra, Ponto de Virada e INDE para 2023")
-
-st.write("## Lógica de Acurácia e Métricas")
-st.write("""
-A acurácia apresentada para os modelos de previsão de Pedra e Ponto de Virada é baseada nas previsões corretas feitas pelo modelo em comparação ao total de previsões.
-Para o modelo ARIMA de previsão de INDE, usamos a métrica de Erro Médio Quadrático Raiz (RMSE), que mede a diferença entre os valores previstos pelo modelo e os valores reais, indicando a precisão do modelo.
-""")
-
-# Espaçamento
-st.write("---")
+# Visão Geral
+if opcao == "Visão Geral":
+    st.title("Visão Geral da Aplicação")
+    st.write("""
+    Esta aplicação permite a previsão de indicadores acadêmicos como PEDRA, PONTO_VIRADA e INDE.
+    Utilize a barra lateral para navegar entre as diferentes funcionalidades.
+    """)
 
 # Análise Comparativa de Múltiplos Alunos
-comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
+elif opcao == "Análise Comparativa":
+    st.title("Análise Comparativa de Múltiplos Alunos")
+    comparar_ids = st.multiselect("Selecione IDs de alunos para comparação", alunos_completos['ID_ALUNO'].unique())
 
-# Filtrar os dados dos alunos selecionados
-alunos_data = alunos_completos[alunos_completos['ID_ALUNO'].isin(comparar_ids)].sort_values(by='ano')
+    if comparar_ids:
+        alunos_data = alunos_completos[alunos_completos['ID_ALUNO'].isin(comparar_ids)].sort_values(by='ano')
+        
+        st.write("## Tendência do INDE ao longo do tempo")
+        fig = px.line(alunos_data, x='ano', y='INDE', color='ID_ALUNO', markers=True)
+        fig.update_layout(height=500)  # Aumentar o tamanho do gráfico
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
+        correlation = alunos_completos[['INDE', 'PEDRA', 'PONTO_VIRADA']].corr()
+        fig_corr = go.Figure(data=go.Heatmap(
+            z=correlation.values,
+            x=correlation.columns,
+            y=correlation.columns,
+            colorscale='Blues'  # Ajuste de cor para combinar com os gráficos de linhas
+        ))
+        st.plotly_chart(fig_corr, use_container_width=True)
 
-# Gráficos de Tendências
-if not alunos_data.empty:
-    st.write("## Tendência do INDE ao longo do tempo para Alunos Selecionados")
-    fig = px.line(alunos_data, x='ano', y='INDE', color='ID_ALUNO', markers=True, title='Tendência do INDE ao longo do tempo')
-    st.plotly_chart(fig)
+# Simulação de Cenários "What-If"
+elif opcao == "Simulação 'What-If'":
+    st.title("Simulação de Cenários 'What-If'")
+    sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
+    sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=50.0, min_value=0.0, max_value=100.0)
 
-    st.write("---")
+    input_simulation = np.array([[alunos_completos.loc[alunos_completos['ID_ALUNO'] == sim_id, 'ANO_INGRESSO'].values[0], sim_inde, 2023]])
+    input_simulation_scaled = scaler.transform(input_simulation)
 
-    st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
-    correlation = alunos_completos[['INDE', 'PEDRA', 'PONTO_VIRADA']].corr()
-    fig_corr = go.Figure(data=go.Heatmap(
-        z=correlation.values,
-        x=correlation.columns,
-        y=correlation.columns,
-        colorscale='Blues'  # Ajuste de cor para combinar com os gráficos de linhas
-    ))
-    fig_corr.update_layout(title='Mapa de Calor das Correlações', xaxis_nticks=36)
-    st.plotly_chart(fig_corr)
+    sim_pred_pedra = rf_pedra.predict(input_simulation_scaled)
+    sim_pred_virada = rf_virada.predict(input_simulation_scaled)
 
-    st.write("---")
+    sim_pedra_pred = label_encoder_pedra.inverse_transform(sim_pred_pedra)
 
-    cols = st.columns(len(comparar_ids))  # Criar colunas para exibir gráficos lado a lado
+    st.write(f"**Previsão Simulada de Pedra para 2023:** **{sim_pedra_pred[0]}**")
+    st.write(f"**Ponto de Virada em 2023 (Simulado):** **{'Sim' if sim_pred_virada[0] == 1 else 'Não'}**")
 
-    for index, id_aluno in enumerate(comparar_ids):
-        aluno_data = alunos_data[alunos_data['ID_ALUNO'] == id_aluno]
+# Métricas dos Modelos
+elif opcao == "Métricas dos Modelos":
+    st.title("Métricas dos Modelos")
 
-        # Preparar os dados do aluno para previsões
-        inde_series = aluno_data.set_index('ano')['INDE']
+    st.write(f"**Acurácia para previsão de Pedra:** **{pedra_accuracy:.2f}**")
+    st.write(f"**Acurácia para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
 
-        # Ajustar o modelo ARIMA para prever INDE
-        try:
-            model = ARIMA(inde_series, order=(1, 1, 1))
-            model_fit = model.fit()
-            forecast = model_fit.forecast(steps=1)  # Prever apenas 2023
+    # Análise Preditiva Avançada: Adicionando explicações
+    import shap
 
-            # Previsão de INDE para 2023
-            inde_2023 = forecast.iloc[0]
+    st.write("### Importância das Variáveis")
+    explainer_pedra = shap.TreeExplainer(rf_pedra)
+    shap_values_pedra = explainer_pedra.shap_values(X_test)
+    shap.summary_plot(shap_values_pedra, X_test, feature_names=['ANO_INGRESSO', 'INDE', 'ano'], plot_type="bar")
+    st.pyplot(bbox_inches='tight')
 
-            # Calcular erro (RMSE) do modelo ARIMA
-            arima_rmse = np.sqrt(mean_squared_error(inde_series, model_fit.predict(start=inde_series.index[0], end=inde_series.index[-1])))
+    explainer_virada = shap.TreeExplainer(rf_virada)
+    shap_values_virada = explainer_virada.shap_values(X_test)
+    shap.summary_plot(shap_values_virada, X_test, feature_names=['ANO_INGRESSO', 'INDE', 'ano'], plot_type="bar")
+    st.pyplot(bbox_inches='tight')
 
-        except Exception as e:
-            st.error(f"Erro ao gerar previsão ARIMA para o aluno {id_aluno}: {e}")
-            inde_2023 = None
-            arima_rmse = None
+    if 'arima_rmse' in locals() and arima_rmse is not None:
+        st.write(f"**RMSE para previsão de INDE:** **{arima_rmse:.2f}**")
 
-        # Fazer previsões para PEDRA e PONTO_VIRADA
-        input_data = np.array([[aluno_data['ANO_INGRESSO'].values[0], inde_series.iloc[-1], 2023]])
-        input_data_scaled = scaler.transform(input_data)
-
-        pred_pedra = rf_pedra.predict(input_data_scaled)
-        pred_virada = rf_virada.predict(input_data_scaled)
-
-        # Traduzir a previsão de pedra para o valor original
-        pedra_pred = label_encoder_pedra.inverse_transform(pred_pedra)
-
-        with cols[index]:
-            st.write(f"**Aluno {id_aluno}:**")
-
-            st.write(f"**Previsão de Pedra para 2023:** **{pedra_pred[0]}**")
-            st.write(f"**Ponto de Virada em 2023:** **{'Sim' if pred_virada[0] == 1 else 'Não'}**")
-
-            if inde_2023 is not None:
-                # Concatenação da previsão com a série existente
-                inde_history = pd.concat([inde_series, pd.Series([inde_2023], index=[2023])])
-
-                fig = go.Figure()
-
-                # Adicionar a série histórica de INDE
-                fig.add_trace(go.Scatter(x=inde_series.index, y=inde_series, mode='lines+markers', name='Histórico INDE'))
-
-                # Adicionar a previsão para 2023
-                fig.add_trace(go.Scatter(x=[2022, 2023], y=[inde_series.iloc[-1], inde_2023],
-                                         mode='lines+markers', name='Previsão 2023', line=dict(color='red')))
-
-                fig.update_layout(xaxis_title='Ano',
-                                  yaxis_title='INDE',
-                                  height=400)  # Aumentar o tamanho do gráfico
-
-                st.plotly_chart(fig)
-
-    st.write("---")
-
-# Predições Personalizadas - Cenários "What-If"
-st.write("## Simulação de Cenários 'What-If'")
-sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
-sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=50.0, min_value=0.0, max_value=100.0)
-
-# Preparar dados de entrada simulados
-input_simulation = np.array([[alunos_completos.loc[alunos_completos['ID_ALUNO'] == sim_id, 'ANO_INGRESSO'].values[0], sim_inde, 2023]])
-input_simulation_scaled = scaler.transform(input_simulation)
-
-# Fazer previsões com os dados simulados
-sim_pred_pedra = rf_pedra.predict(input_simulation_scaled)
-sim_pred_virada = rf_virada.predict(input_simulation_scaled)
-
-# Traduzir a previsão de pedra para o valor original
-sim_pedra_pred = label_encoder_pedra.inverse_transform(sim_pred_pedra)
-
-# Exibir resultados da simulação
-st.write(f"**Previsão Simulada de Pedra para 2023:** **{sim_pedra_pred[0]}**")
-st.write(f"**Ponto de Virada em 2023 (Simulado):** **{'Sim' if sim_pred_virada[0] == 1 else 'Não'}**")
-
-st.write("---")
-
-# Mostrar Métricas dos Modelos no final do site
-st.write("## Métricas dos Modelos")
-
-st.write(f"**Acurácia para previsão de Pedra:** **{pedra_accuracy:.2f}**")
-st.write(f"**Acurácia para previsão de Ponto de Virada:** **{virada_accuracy:.2f}**")
-
-if 'arima_rmse' in locals() and arima_rmse is not None:
-    st.write(f"**RMSE para previsão de INDE:** **{arima_rmse:.2f}**")
-
-st.write("---")
-
-# Opcional: Mostrar os dados brutos (para análise detalhada)
-if st.checkbox("Mostrar dados brutos dos alunos"):
+# Mostrar dados brutos (opcional)
+if st.sidebar.checkbox("Mostrar dados brutos dos alunos"):
     st.write(alunos_completos)

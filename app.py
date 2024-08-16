@@ -67,6 +67,12 @@ virada_accuracy = accuracy_score(y_test_virada, rf_virada.predict(X_test))
 
 # Interface no Streamlit
 st.title("Projeção de Pedra, Ponto de Virada e INDE para 2023")
+st.write("""
+Apresentamos as projeções para três indicadores-chave de desempenho acadêmico dos alunos: 
+**Pedra**, que representa a resiliência do aluno; **Ponto de Virada**, que identifica momentos críticos de mudança no desempenho; 
+e **INDE** (Índice de Desenvolvimento Educacional), que avalia o desempenho acadêmico geral. Essas projeções ajudam a antecipar 
+necessidades de intervenção para apoiar melhor os alunos em seu desenvolvimento educacional.
+""")
 
 # Análise Comparativa de Alunos
 st.write("## Análise Comparativa de Múltiplos Alunos")

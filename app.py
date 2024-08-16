@@ -176,7 +176,7 @@ Essa funcionalidade é crucial para ajudar a ONG Passos Mágicos a tomar decisõ
 """)
 
 sim_id = st.selectbox("Selecione o ID do Aluno para Simulação", alunos_completos['ID_ALUNO'].unique())
-sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=5.0, min_value=0.0, max_value=10.0)
+sim_inde = st.number_input("Projeção de INDE para 2023 (Simulação)", value=0.0, min_value=0.0, max_value=10.0)
 
 # Entrada simulados
 input_simulation = np.array([[alunos_completos.loc[alunos_completos['ID_ALUNO'] == sim_id, 'ANO_INGRESSO'].values[0], sim_inde, 2023]])

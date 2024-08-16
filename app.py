@@ -83,48 +83,6 @@ if not alunos_data.empty:
 
     st.write("---")
 
-    # Correlação
-    st.write("## Correlação entre INDE, PEDRA, e PONTO DE VIRADA")
-    st.write("""
-    ### O que é a Correlação?
-
-    A correlação é uma medida estatística que indica a força e a direção do relacionamento entre duas ou mais variáveis. Na educação, compreender a correlação entre diferentes indicadores de desempenho dos alunos pode fornecer insights valiosos sobre como esses indicadores se influenciam mutuamente.
-
-    ### Interpretação das Correlações
-
-    Nesta seção, exploramos a correlação entre três indicadores críticos:
-
-    1. **INDE (Índice de Desenvolvimento Educacional)**: Mede o desempenho acadêmico geral do aluno.
-    2. **PEDRA**: Representa a resiliência do aluno, ou seja, a sua capacidade de superar desafios e persistir nos estudos.
-    3. **PONTO_VIRADA**: Indica um ponto crítico onde pode ocorrer uma mudança significativa no desempenho do aluno, seja positiva ou negativa.
-
-    ### Como Ler o Mapa de Calor
-
-    O mapa de calor (heatmap) apresentado a seguir mostra as correlações entre INDE, PEDRA e PONTO_VIRADA:
-
-    - **Correlação Positiva**: Um valor positivo indica que, à medida que um indicador aumenta, o outro também tende a aumentar. Por exemplo, se houver uma correlação positiva alta entre INDE e PEDRA, isso sugere que alunos com alto desempenho acadêmico (INDE) também tendem a mostrar alta resiliência (PEDRA).
-    - **Correlação Negativa**: Um valor negativo indica que, à medida que um indicador aumenta, o outro tende a diminuir. Por exemplo, se houver uma correlação negativa entre PEDRA e PONTO_VIRADA, isso pode sugerir que alunos mais resilientes têm menos probabilidade de experimentar uma mudança abrupta em seu desempenho.
-    - **Correlação Próxima de Zero**: Indica pouca ou nenhuma relação linear entre os indicadores. Isso significa que as mudanças em um indicador não têm um efeito previsível sobre o outro.
-
-    ### Utilidade da Correlação
-
-    Entender as correlações entre esses indicadores pode ajudar a ONG Passos Mágicos a identificar padrões e tomar decisões mais informadas. Por exemplo, se a ONG perceber que a resiliência (PEDRA) está fortemente correlacionada com o desempenho acadêmico (INDE), pode concentrar seus esforços em fortalecer a resiliência dos alunos para melhorar seu desempenho geral.
-
-    A análise das correlações também pode ajudar a identificar quais alunos estão em risco de enfrentar um ponto de virada negativo e precisar de intervenção imediata.
-    """)
-
-    correlation = alunos_completos[['INDE', 'PEDRA', 'PONTO_VIRADA']].corr()
-    fig_corr = go.Figure(data=go.Heatmap(
-        z=correlation.values,
-        x=correlation.columns,
-        y=correlation.columns,
-        colorscale='Blues'
-    ))
-    fig_corr.update_layout(title='Mapa de Calor das Correlações', xaxis_nticks=36)
-    st.plotly_chart(fig_corr)
-
-    st.write("---")
-
     # Título e explicação para os gráficos de projeção de INDE
     st.write("## Projeção do INDE para 2023")
     st.write("""

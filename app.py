@@ -84,7 +84,7 @@ if not alunos_data.empty:
     st.write("---")
 
     # Correlação
-    st.write("## Correlação entre INDE, PEDRA, e PONTO_VIRADA")
+    st.write("## Correlação entre INDE, PEDRA, e PONTO DE VIRADA")
     st.write("""
     ### O que é a Correlação?
 
